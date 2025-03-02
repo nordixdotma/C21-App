@@ -5,13 +5,16 @@ import { guides } from "@/lib/constants"
 
 export function Guides() {
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-16 bg-white">
       <div className="max-w-[1170px] mx-auto px-4">
         <div className="flex items-center justify-between mb-8">
           <h2 className="text-3xl font-extrabold">Guides</h2>
-          <Button variant="outline" className="rounded-full">
-            VIEW ALL GUIDES
-            <ChevronRight className="ml-2 h-4 w-4" />
+          <Button 
+            className="bg-white text-primary rounded-full px-8 py-3 text-sm font-semibold uppercase tracking-wider border-2 border-primary hover:bg-primary hover:text-white transition-all duration-300 group flex items-center"
+            variant="outline"
+          >
+            <span>View All Guides</span>
+            <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
           </Button>
         </div>
 
@@ -26,9 +29,9 @@ export function Guides() {
                 className="w-full h-full object-cover opacity-75 group-hover:opacity-50 transition-opacity"
               />
               <div className="absolute inset-0 p-6 flex flex-col justify-end text-white">
-                <h3 className="text-xl font-bold mb-2">{guide.title}</h3>
-                <p className="text-sm opacity-90">{guide.subtitle}</p>
-                <ChevronRight className="absolute bottom-6 right-6 h-6 w-6" />
+                <h3 className="text-xl font-bold mb-1">{guide.title}</h3>
+                <p className="text-xs opacity-90">{guide.subtitle}</p>
+                <ChevronRight className="absolute bottom-5 right-6 h-6 w-6" />
               </div>
             </div>
           ))}

@@ -18,7 +18,7 @@ export function Newsletter() {
   return (
     <section className="py-10 sm:py-16 md:py-24">
       <div className="max-w-[1170px] mx-auto px-3 sm:px-4">
-        <div className="bg-secondary rounded-xl sm:rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-12 lg:p-16">
+        <div className="bg-black rounded-xl sm:rounded-2xl md:rounded-3xl p-6 sm:p-8 md:p-12 lg:p-16">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="font-heading text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold tracking-tight text-white mb-3 sm:mb-4 md:mb-6">
               Stay Updated with Market Insights

@@ -61,22 +61,22 @@ export const stats: Stat[] = [
 export const guides: Guide[] = [
   {
     title: "Buying Guide",
-    subtitle: "How to Buy Property in Dubai",
+    subtitle: "How to Buy Property in Marrakech",
     image: "https://images.unsplash.com/photo-1560185893-a55cbc8c57da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
   },
   {
     title: "Buying Offplan Guide",
-    subtitle: "How to Buy Off Plan in Dubai",
+    subtitle: "How to Buy Off Plan in Marrakech",
     image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
   },
   {
     title: "Renting Guide",
-    subtitle: "How to Rent Property in Dubai",
+    subtitle: "How to Rent Property in Marrakech",
     image: "https://images.unsplash.com/photo-1560518883-2d5b0d9e2b05?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
   },
   {
     title: "Selling Guide",
-    subtitle: "How to Sell Property in Dubai",
+    subtitle: "How to Sell Property in Marrakech",
     image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
   },
 ]
@@ -90,7 +90,6 @@ export const featuredProjects: Project[] = [
       "handover": "Handover in Q4 2024",
       "price": "from MAD 2.5M",
       "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      "paymentPlan": "30/70 Payment Plan"
     },
     {
       "id": 2,
@@ -100,7 +99,6 @@ export const featuredProjects: Project[] = [
       "handover": "Handover in Q2 2025",
       "price": "from MAD 1.8M",
       "image": "https://images.unsplash.com/photo-1568605114967-8130f3a36994?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      "paymentPlan": "40/60 Payment Plan"
     },
     {
       "id": 3,
@@ -110,7 +108,6 @@ export const featuredProjects: Project[] = [
       "handover": "Handover in Q3 2024",
       "price": "from MAD 4.2M",
       "image": "https://images.unsplash.com/photo-1613977257592-6205e87d73a8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      "status": "Limited Units!"
     },
     {
       "id": 4,
@@ -120,7 +117,6 @@ export const featuredProjects: Project[] = [
       "handover": "Handover in Q1 2026",
       "price": "from MAD 3.1M",
       "image": "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      "paymentPlan": "50/50 Payment Plan"
     },
     {
       "id": 5,
@@ -130,7 +126,6 @@ export const featuredProjects: Project[] = [
       "handover": "Handover in Q4 2025",
       "price": "from MAD 5.5M",
       "image": "https://images.unsplash.com/photo-1570129477492-45c003edd2be?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      "status": "Exclusive Offer!"
     },
     {
       "id": 6,
@@ -140,7 +135,6 @@ export const featuredProjects: Project[] = [
       "handover": "Handover in Q2 2024",
       "price": "from MAD 2.2M",
       "image": "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      "paymentPlan": "35/65 Payment Plan"
     },
     {
       "id": 7,
@@ -150,7 +144,6 @@ export const featuredProjects: Project[] = [
       "handover": "Handover in Q3 2025",
       "price": "from MAD 2.9M",
       "image": "https://images.unsplash.com/photo-1483097365279-e8acd3bf6f08?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-      "paymentPlan": "20/80 Payment Plan"
     }  
 ]
 

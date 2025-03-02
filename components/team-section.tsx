@@ -25,7 +25,7 @@ export function TeamSection() {
             <Button
               variant="outline"
               size="icon"
-              className="rounded-full"
+              className="rounded-full border-2"
               onClick={() => swiperRef.current?.slidePrev()}
             >
               <ChevronLeft className="h-5 w-5" />
@@ -33,7 +33,7 @@ export function TeamSection() {
             <Button
               variant="outline"
               size="icon"
-              className="rounded-full"
+              className="rounded-full border-2"
               onClick={() => swiperRef.current?.slideNext()}
             >
               <ChevronRight className="h-5 w-5" />
