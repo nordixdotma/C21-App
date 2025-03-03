@@ -59,6 +59,6 @@ export default function LeafletMap({ latitude, longitude, popupContent }: Leafle
   }, [isClient, latitude, longitude, popupContent])
 
   // Add a class to ensure the container has dimensions
-  return <div ref={mapRef} className="w-full h-full min-h-[400px]" style={{ aspectRatio: "16/9" }} />
+  return <div ref={mapRef} className="w-full h-full min-h-[400px] z-[5]" style={{ aspectRatio: "16/9" }} />
 }
 

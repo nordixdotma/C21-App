@@ -44,6 +44,6 @@ export default function LeafletMap({ latitude, longitude }: LeafletMapProps) {
     }
   }, [isClient, latitude, longitude])
 
-  return <div ref={mapRef} className="w-full h-full min-h-[400px]" style={{ aspectRatio: "16/9" }} />
+  return <div ref={mapRef} className="w-full h-full min-h-[400px] z-[5]" style={{ aspectRatio: "16/9" }} />
 }
 

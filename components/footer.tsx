@@ -27,17 +27,11 @@ function FooterLink({ href, children }: { href: string; children: React.ReactNod
 
 export function Footer() {
   return (
-    <footer className="bg-black text-white pt-12 md:pt-16 pb-8">
+    <footer className="bg-black text-white pt-12 md:pt-16 pb-8 mt-16">
       <div className="max-w-[1170px] mx-auto px-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-8 md:mb-12">
           <div>
-            <Image
-              src="/C21 logo rbz.png"
-              alt="CENTURY 21"
-              width={120}
-              height={60}
-              className="mb-6 w-24 sm:w-32"
-            />
+            <Image src="/C21 logo rbz.png" alt="CENTURY 21" width={120} height={60} className="mb-6 w-24 sm:w-32" />
             <p className="font-body text-gray-100 mb-6 text-sm sm:text-base">
               Your trusted partner in real estate, providing exceptional service and expertise since 2005.
             </p>

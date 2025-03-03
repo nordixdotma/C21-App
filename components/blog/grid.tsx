@@ -33,7 +33,7 @@ const recentPosts = [
     excerpt:
       "Explore the most exclusive villa communities in Marrakech, featuring world-class amenities and stunning architecture.",
     image:
-      "https://images.unsplash.com/photo-1613977257592-6205e87d73a8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "https://th.bing.com/th/id/OIP.cf6HOzgq46VAYAMoV4LIugHaEt?w=966&h=614&rs=1&pid=ImgDetMain",
     category: "Lifestyle",
     date: "January 5, 2024",
     readTime: "6 min read",

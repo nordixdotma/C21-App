@@ -161,7 +161,7 @@ export const teamMembers: TeamMember[] = [
       "name": "Sadghi mhamdi",
       "role": "Property Advisor",
       "specialization": "Off Plan Properties",
-      "image": "https://images.unsplash.com/photo-1517841902196-6c0e70e7f9f8?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+      "image": "https://th.bing.com/th/id/OIP.ZP-E8ZFH11wb1XSm0dn-5wHaJQ?rs=1&pid=ImgDetMain",
       "whatsapp": "+998909998877"
     },
     {

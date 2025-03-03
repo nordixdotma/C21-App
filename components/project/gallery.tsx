@@ -14,7 +14,7 @@ export function ProjectGallery({ images, className }: ProjectGalleryProps) {
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="relative aspect-[16/9] overflow-hidden rounded-lg">
+      <div className="relative aspect-[16/9] overflow-hidden">
         <Image
           src={images[activeImage] || "/placeholder.svg"}
           alt="Project image"
@@ -28,7 +28,7 @@ export function ProjectGallery({ images, className }: ProjectGalleryProps) {
             key={index}
             onClick={() => setActiveImage(index)}
             className={cn(
-              "relative aspect-[4/3] overflow-hidden rounded-lg transition-all",
+              "relative aspect-[4/3] overflow-hidden transition-all",
               "hover:ring-2 hover:ring-primary focus:outline-none focus:ring-2 focus:ring-primary",
               activeImage === index && "ring-2 ring-primary",
             )}

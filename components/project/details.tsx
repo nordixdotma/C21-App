@@ -36,7 +36,7 @@ export function ProjectDetails({ details, className }: ProjectDetailsProps) {
 
 function DetailItem({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border p-4">
+    <div className="border border-gray-200 p-4">
       <p className="text-sm text-gray-500">{label}</p>
       <p className="mt-1 font-medium">{value}</p>
     </div>

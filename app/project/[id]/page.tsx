@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
-import { Loader2 } from "lucide-react"
+import { Loader2, PhoneIcon as WhatsApp } from "lucide-react"
 import { ProjectGallery } from "@/components/project/gallery"
 import { ProjectInfo } from "@/components/project/info"
 import { ProjectDetails } from "@/components/project/details"
@@ -15,6 +15,7 @@ import { ContactSidebar } from "@/components/project/contact-sidebar"
 import { Footer } from "@/components/footer"
 import { Navbar } from "@/components/navbar"
 import { featuredProjects } from "@/lib/constants"
+import { Button } from "@/components/ui/button"
 
 export default function ProjectPage({ params }: { params: { id: string } }) {
   const [project, setProject] = useState<any>(null)
@@ -84,30 +85,67 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
           <ProjectInfo project={project} />
         </div>
       </div>
-      <main className="flex-grow py-16">
+      <main className="flex-grow mt-8">
         <div className="max-w-[1170px] mx-auto px-4">
           <div className="flex flex-col lg:flex-row gap-8">
             {/* Main Content */}
             <div className="flex-grow lg:w-[70%]">
-              <ProjectGallery images={project.gallery} className="mt-8" />
-              <ProjectDetails details={project.details} className="mt-12" />
-              <div className="mt-12">
-                <h2 className="text-2xl font-semibold mb-4">Description</h2>
-                <p className="text-gray-600 leading-relaxed">{project.description}</p>
+              <div className="space-y-8">
+                <ProjectGallery images={project.gallery} />
+
+                <div className="border-t border-gray-200 pt-8">
+                  <ProjectDetails details={project.details} />
+                </div>
+
+                <div className="border-t border-gray-200 pt-8">
+                  <h2 className="text-2xl font-semibold mb-4">Description</h2>
+                  <p className="text-gray-600 leading-relaxed">{project.description}</p>
+                </div>
+
+                <div className="border-t border-gray-200 pt-8">
+                  <ProjectLocation address={project.address} coordinates={project.coordinates} />
+                </div>
+
+                <div className="border-t border-gray-200 pt-8">
+                  <ProjectFeatures features={project.features} />
+                </div>
+
+                {project.video && (
+                  <div className="border-t border-gray-200 pt-8">
+                    <ProjectVideo videoUrl={project.video} />
+                  </div>
+                )}
+
+                <div className="border-t border-gray-200 pt-8">
+                  <ProjectMap latitude={project.coordinates.lat} longitude={project.coordinates.lng} />
+                </div>
+
+                <div className="border-t border-gray-200 pt-8">
+                  <SimilarProjects currentProjectId={project.id} />
+                </div>
               </div>
-              <ProjectLocation address={project.address} coordinates={project.coordinates} className="mt-12" />
-              <ProjectFeatures features={project.features} className="mt-12" />
-              <ProjectVideo videoUrl={project.video} className="mt-12" />
-              <ProjectMap latitude={project.coordinates.lat} longitude={project.coordinates.lng} className="mt-12" />
-              <SimilarProjects currentProjectId={project.id} className="mt-16" />
             </div>
 
             {/* Sidebar */}
             <div className="lg:w-[30%]">
-              <ContactSidebar className="sticky top-32" />
+              <div className="sticky top-32" style={{ zIndex: 10 }}>
+                <ContactSidebar />
+              </div>
             </div>
           </div>
         </div>
+
+        {/* Fixed WhatsApp Button (Mobile Only) */}
+        <a
+          href={`https://wa.me/212664722488?text=Hi, I'm interested in ${project.name}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="fixed bottom-6 right-6 z-50 lg:hidden"
+        >
+          <Button className="h-14 w-14 rounded-full bg-green-500 hover:bg-green-600 shadow-lg">
+            <WhatsApp className="h-6 w-6 text-white" />
+          </Button>
+        </a>
       </main>
       <Footer />
     </div>

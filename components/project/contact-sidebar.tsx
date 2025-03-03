@@ -31,9 +31,9 @@ export function ContactSidebar({ className }: ContactSidebarProps) {
   return (
     <div className={cn("rounded-xl border bg-white p-6 shadow-sm", className)}>
       <div className="mb-6 flex items-center gap-4">
-        <Image src="/placeholder-user.jpg" alt="Agent" width={60} height={60} className="rounded-full" />
+        <Image src="https://th.bing.com/th/id/OIP.ZP-E8ZFH11wb1XSm0dn-5wHaJQ?rs=1&pid=ImgDetMain" alt="Agent" width={60} height={60} className="rounded-full" />
         <div>
-          <h3 className="font-semibold">John Doe</h3>
+          <h3 className="font-semibold">sadghi mhamdi</h3>
           <p className="text-sm text-gray-600">Real Estate Agent</p>
         </div>
       </div>
