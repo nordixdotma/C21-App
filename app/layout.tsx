@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   icons: {
     icon: "/C21 logo rbz.png",
   },
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -21,3 +22,7 @@ export default function RootLayout({
     </html>
   )
 }
+
+
+
+import './globals.css'

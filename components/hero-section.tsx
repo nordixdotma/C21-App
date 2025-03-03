@@ -1,8 +1,10 @@
 "use client"
 
 import type React from "react"
-import Image from "next/image"
+
 import { useState, useEffect } from "react"
+import Image from "next/image"
+import { useRouter } from "next/navigation"
 import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,7 +12,9 @@ import { Input } from "@/components/ui/input"
 const phrases = ["Marrakech", "Hivernage", "Gueliz", "Palm Grove", "Agdal"]
 
 export function HeroSection() {
+  const router = useRouter()
   const [activeTab, setActiveTab] = useState("buy")
+  const [searchQuery, setSearchQuery] = useState("")
   const [isLoaded, setIsLoaded] = useState(false)
   const [displayedPhrase, setDisplayedPhrase] = useState("")
   const [activeIndex, setActiveIndex] = useState(0)
@@ -20,15 +24,11 @@ export function HeroSection() {
   // Effect to handle mobile viewport height
   useEffect(() => {
     const updateViewportHeight = () => {
-      // Use the visual viewport height if available (handles mobile browser chrome)
       const vh = window.visualViewport?.height || window.innerHeight
       setViewportHeight(`${vh}px`)
     }
 
-    // Initial update
     updateViewportHeight()
-
-    // Update on resize and orientation change
     window.visualViewport?.addEventListener("resize", updateViewportHeight)
     window.visualViewport?.addEventListener("scroll", updateViewportHeight)
     window.addEventListener("resize", updateViewportHeight)
@@ -77,6 +77,14 @@ export function HeroSection() {
       clearTimeout(deletingTimer)
     }
   }, [activeIndex, displayedPhrase, isTyping])
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault()
+    const searchParams = new URLSearchParams()
+    searchParams.set("q", searchQuery)
+    searchParams.set("type", activeTab)
+    router.push(`/search?${searchParams.toString()}`)
+  }
 
   return (
     <section
@@ -129,18 +137,23 @@ export function HeroSection() {
               isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
             }`}
           >
-            <Input
-              type="text"
-              placeholder="Search by area or project name"
-              className="w-full h-10 sm:h-12 pl-4 sm:pl-6 pr-20 sm:pr-24 rounded-full text-sm sm:text-base bg-white/95 backdrop-blur-sm border-0 shadow-lg"
-            />
-            <Button
-              size="default"
-              className="absolute right-1 top-1 h-8 sm:h-10 px-3 sm:px-4 rounded-full bg-primary hover:bg-primary/90 text-xs sm:text-sm"
-            >
-              <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 hidden sm:block" />
-              <span>Rechercher</span>
-            </Button>
+            <form onSubmit={handleSearch}>
+              <Input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Search by area or project name"
+                className="w-full h-10 sm:h-12 pl-4 sm:pl-6 pr-20 sm:pr-24 rounded-full text-sm sm:text-base bg-white/95 backdrop-blur-sm border-0 shadow-lg"
+              />
+              <Button
+                type="submit"
+                size="default"
+                className="absolute right-1 top-1 h-8 sm:h-10 px-3 sm:px-4 rounded-full bg-primary hover:bg-primary/90 text-xs sm:text-sm"
+              >
+                <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 hidden sm:block" />
+                <span>Search</span>
+              </Button>
+            </form>
           </div>
         </div>
 
@@ -151,33 +164,33 @@ export function HeroSection() {
               <div className="flex">
                 <div className="flex flex-col ml-5">
                   <div className="flex">
-                      <img
-                        src="https://famproperties.com/assets/famproperties/images/reviews/Review-stars.png?v=1.1"
-                        loading="lazy"
-                        width="120"
-                        height="75"
-                        alt="Review stars"
-                        className="w-20 sm:w-24"
-                      />
+                    <img
+                      src="https://famproperties.com/assets/famproperties/images/reviews/Review-stars.png?v=1.1"
+                      loading="lazy"
+                      width="120"
+                      height="75"
+                      alt="Review stars"
+                      className="w-20 sm:w-24"
+                    />
                   </div>
                 </div>
               </div>
               <div className="text-center sm:text-left">
                 <p className="text-xs sm:text-sm md:text-base">
-                  It <span className="text-primary">Matters</span> which{" "}
-                  <span className="text-primary">Agency</span> you <span className="text-primary">Trust</span>
+                  It <span className="text-primary">Matters</span> which <span className="text-primary">Agency</span>{" "}
+                  you <span className="text-primary">Trust</span>
                 </p>
               </div>
             </div>
             <div className="flex">
-                <img
-                  src="https://famproperties.com/assets/famproperties/images/reviews/reviews-new.png?v=1.1"
-                  loading="lazy"
-                  width="80"
-                  height="64"
-                  alt="Reviews"
-                  className="w-16 sm:w-20"
-                />
+              <img
+                src="https://famproperties.com/assets/famproperties/images/reviews/reviews-new.png?v=1.1"
+                loading="lazy"
+                width="80"
+                height="64"
+                alt="Reviews"
+                className="w-16 sm:w-20"
+              />
             </div>
           </div>
         </div>

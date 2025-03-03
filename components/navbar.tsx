@@ -9,10 +9,10 @@ import { NavLink, NavDropdown, MobileNavSection } from "@/components/navbar-comp
 import { useRouter } from "next/navigation"
 
 const buyMenuItems = [
-  { href: "/properties/houses", label: "Houses" },
-  { href: "/properties/apartments", label: "Apartments" },
-  { href: "/properties/villas", label: "Villas" },
-  { href: "/properties/commercial", label: "Commercial" },
+  { href: "/buy/houses", label: "Houses" },
+  { href: "/buy/apartments", label: "Apartments" },
+  { href: "/buy/villas", label: "Villas" },
+  { href: "/buy/commercial", label: "Commercial" },
 ]
 
 const rentMenuItems = [
@@ -22,7 +22,6 @@ const rentMenuItems = [
 ]
 
 const moreMenuItems = [
-  { href: "/blog", label: "Blog" },
   { href: "/faqs", label: "FAQs" },
   { href: "/careers", label: "Careers" },
 ]
@@ -112,7 +111,7 @@ export function Navbar() {
               onMouseLeave={() => setActiveDropdown(null)}
             />
             <NavLink href="/sell" label="Sell" isScrolled={isScrolled} />
-            <NavLink href="/Blog" label="Blog" isScrolled={isScrolled} />
+            <NavLink href="/blog" label="Blog" isScrolled={isScrolled} />
             <NavLink href="/about" label="About" isScrolled={isScrolled} />
             <NavLink href="/contact" label="Contact" isScrolled={isScrolled} />
           </div>
