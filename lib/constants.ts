@@ -213,7 +213,7 @@ export const articles: NewsArticle[] = [
     excerpt:
       "Discover the latest trends and insights in Marrakech's dynamic property market, including emerging neighborhoods and investment opportunities.",
     date: "January 15, 2024",
-    image: "https://images.unsplash.com/photo-1560185893-a55cbc8c57da?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+    image: "https://www.flatheadrealestate.com/assets/images/montana-real-estate/5/30011675/large/30011675_1.jpg",
     category: "Market Insights",
   },
   {
