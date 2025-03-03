@@ -1,53 +1,19 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { Phone, Mail, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { NavLink, NavDropdown, MobileNavSection } from "@/components/navbar-components"
-import { useRouter } from "next/navigation"
+import { buyMenuItems, rentMenuItems, moreMenuItems } from "@/lib/constants"
 
-const buyMenuItems = [
-  { href: "/properties/houses", label: "Houses" },
-  { href: "/properties/apartments", label: "Apartments" },
-  { href: "/properties/villas", label: "Villas" },
-  { href: "/properties/commercial", label: "Commercial" },
-]
-
-const rentMenuItems = [
-  { href: "/rent/houses", label: "Houses" },
-  { href: "/rent/apartments", label: "Apartments" },
-  { href: "/rent/villas", label: "Villas" },
-]
-
-const moreMenuItems = [
-  { href: "/blog", label: "Blog" },
-  { href: "/faqs", label: "FAQs" },
-  { href: "/careers", label: "Careers" },
-]
-
-export function Navbar() {
-  const [isScrolled, setIsScrolled] = useState(false)
+export function ProductHeader() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
-  const router = useRouter()
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 0)
-    }
-
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
 
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-        isScrolled ? "bg-white shadow-md" : "bg-transparent"
-      }`}
-    >
+    <header className="fixed top-0 left-0 right-0 z-50 bg-black">
       {/* Upper Section */}
       <div className="max-w-[1170px] mx-auto px-3 lg:px-8">
         <div className="h-14 md:h-16 flex items-center justify-between border-b border-white/10">
@@ -64,29 +30,20 @@ export function Navbar() {
               className="h-4 w-auto"
             />
             <Button
-              variant={isScrolled ? "default" : "outline"}
+              variant="outline"
               size="sm"
-              className={`rounded-full transition-all duration-300 ${
-                !isScrolled
-                  ? "text-white border-white hover:bg-white/10 backdrop-blur-sm bg-transparent"
-                  : "bg-primary text-white hover:bg-primary/90"
-              }`}
-              onClick={() => router.push("/login")}
+              className="rounded-full text-white border-white hover:bg-white/10 backdrop-blur-sm bg-transparent"
             >
               Login
             </Button>
           </div>
 
           <button
-            className="md:hidden z-50 relative p-1.5"
+            className="md:hidden z-50 relative p-1.5 text-white" // Added text-white for better visibility
             onClick={() => setIsMenuOpen(!isMenuOpen)}
             aria-label="Toggle menu"
           >
-            {isMenuOpen ? (
-              <X className={`h-5 w-5 ${isScrolled ? "text-gray-900" : "text-white"}`} />
-            ) : (
-              <Menu className={`h-5 w-5 ${isScrolled ? "text-gray-900" : "text-white"}`} />
-            )}
+            {isMenuOpen ? <X className="h-5 w-5 text-white" /> : <Menu className="h-5 w-5 text-white" />}
           </button>
         </div>
       </div>
@@ -98,36 +55,40 @@ export function Navbar() {
             <NavDropdown
               label="Buy"
               items={buyMenuItems}
-              isScrolled={isScrolled}
+              isScrolled={false}
               isActive={activeDropdown === "buy"}
               onMouseEnter={() => setActiveDropdown("buy")}
               onMouseLeave={() => setActiveDropdown(null)}
-            />
+            >
+              <button className={`flex items-center gap-2 text-sm text-white hover:text-primary py-1.5`}>Buy</button>
+            </NavDropdown>
             <NavDropdown
               label="Rent"
               items={rentMenuItems}
-              isScrolled={isScrolled}
+              isScrolled={false}
               isActive={activeDropdown === "rent"}
               onMouseEnter={() => setActiveDropdown("rent")}
               onMouseLeave={() => setActiveDropdown(null)}
-            />
-            <NavLink href="/sell" label="Sell" isScrolled={isScrolled} />
-            <NavLink href="/Blog" label="Blog" isScrolled={isScrolled} />
-            <NavLink href="/about" label="About" isScrolled={isScrolled} />
-            <NavLink href="/contact" label="Contact" isScrolled={isScrolled} />
+            >
+              <button className={`flex items-center gap-2 text-sm text-white hover:text-primary py-1.5`}>Rent</button>
+            </NavDropdown>
+            <NavLink href="/sell" label="Sell" isScrolled={false} />
+            <NavLink href="/Blog" label="Blog" isScrolled={false} />
+            <NavLink href="/about" label="About" isScrolled={false} />
+            <NavLink href="/contact" label="Contact" isScrolled={false} />
           </div>
         </nav>
       </div>
 
       {/* Mobile Menu */}
       <div
-        className={`lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 ${
+        className={`lg:hidden fixed inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300 z-50 ${
           isMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
         }`}
         onClick={() => setIsMenuOpen(false)}
       >
         <div
-          className={`fixed inset-y-0 right-0 w-[280px] bg-white transform transition-transform duration-300 ease-out ${
+          className={`fixed inset-y-0 right-0 w-[280px] bg-white transform transition-transform duration-300 ease-out z-[51] ${
             isMenuOpen ? "translate-x-0" : "translate-x-full"
           }`}
           onClick={(e) => e.stopPropagation()}
@@ -139,7 +100,7 @@ export function Navbar() {
               <Link href="/sell" className="text-gray-900 hover:text-primary py-1.5 text-base">
                 Sell
               </Link>
-              <MobileNavSection title="Blog" items={moreMenuItems} />
+              <MobileNavSection title="More" items={moreMenuItems} />
               <Link href="/about" className="text-gray-900 hover:text-primary py-1.5 text-base">
                 About
               </Link>

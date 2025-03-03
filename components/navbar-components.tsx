@@ -34,7 +34,7 @@ export function NavDropdown({
         className={`flex items-center gap-2 text-sm ${isScrolled ? "text-gray-900 hover:text-primary" : "text-white hover:text-primary"} py-1.5`}
       >
         {label}
-        <ChevronDown className={`h-3 w-3 ${isActive ? "text-primary" : "text-gray-500"}`} />
+        <ChevronDown className={`h-3 w-3 ${isActive ? "text-primary" : "text-white"}`} />
       </button>
       {isActive && (
         <ul className="absolute top-full left-0 bg-white shadow-md rounded-md mt-1 z-10">

@@ -6,6 +6,7 @@ import { Autoplay, Navigation } from "swiper/modules"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Image from "next/image"
+import Link from "next/link"
 import type { Project } from "@/types"
 import { featuredProjects } from "@/lib/constants"
 
@@ -84,7 +85,10 @@ export function LatestProjects({ projects = featuredProjects }: { projects?: Pro
 
 function ProjectCard({ project }: { project: Project }) {
   return (
-    <div className="group bg-white rounded-lg sm:rounded-xl overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1">
+    <Link
+      href={project?.id ? `/projects/${project.id}` : "#"}
+      className="group block bg-white rounded-lg sm:rounded-xl overflow-hidden shadow-lg transition-transform duration-300 hover:-translate-y-1"
+    >
       <div className="relative">
         <div className="aspect-[4/3] overflow-hidden">
           <Image
@@ -162,12 +166,12 @@ function ProjectCard({ project }: { project: Project }) {
           </div>
         </div>
         <div className="pt-3 sm:pt-4 border-t">
-          <Button variant="secondary" className="w-full rounded-full text-xs sm:text-sm">
+          <div className="w-full rounded-full bg-secondary text-white text-center py-2 text-xs sm:text-sm">
             {project.price}
-          </Button>
+          </div>
         </div>
       </div>
-    </div>
+    </Link>
   )
 }
 
