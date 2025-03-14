@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // This would come from your backend in a real application
 const ADMIN_CREDENTIALS = {
@@ -16,22 +17,37 @@ const ADMIN_CREDENTIALS = {
   password: "admin123",
 }
 
+const CLIENT_CREDENTIALS = {
+  username: "client",
+  password: "client123",
+}
+
 export default function LoginPage() {
   const router = useRouter()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [activeTab, setActiveTab] = useState("admin")
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+    if (activeTab === "admin" && username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
       // In a real application, you would:
       // 1. Make an API call to verify credentials
       // 2. Receive and store a JWT token
       // 3. Set up proper session management
       localStorage.setItem("isAuthenticated", "true")
+      localStorage.setItem("userRole", "admin")
       router.push("/dashboard")
+    } else if (
+      activeTab === "client" &&
+      username === CLIENT_CREDENTIALS.username &&
+      password === CLIENT_CREDENTIALS.password
+    ) {
+      localStorage.setItem("isAuthenticated", "true")
+      localStorage.setItem("userRole", "client")
+      router.push("/client-dashboard")
     } else {
       setError("Invalid username or password")
     }
@@ -58,42 +74,104 @@ export default function LoginPage() {
         <div className="lg:p-8">
           <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
             <div className="flex flex-col space-y-2 text-center">
-              <h1 className="text-2xl font-typold font-semibold tracking-tight text-white">Admin Login</h1>
-              <p className="text-sm font-oakes text-muted-foreground">Enter your credentials to access the dashboard</p>
+              <h1 className="text-2xl font-typold font-semibold tracking-tight text-white">Welcome Back</h1>
+              <p className="text-sm font-oakes text-muted-foreground">Sign in to access your account</p>
             </div>
 
-            {error && (
-              <Alert variant="destructive">
-                <ExclamationTriangleIcon className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+            <Tabs defaultValue="admin" value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 bg-white/10">
+                <TabsTrigger
+                  value="admin"
+                  className="text-white data-[state=active]:bg-primary data-[state=active]:text-white"
+                >
+                  Admin
+                </TabsTrigger>
+                <TabsTrigger
+                  value="client"
+                  className="text-white data-[state=active]:bg-primary data-[state=active]:text-white"
+                >
+                  Client
+                </TabsTrigger>
+              </TabsList>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Input
-                  type="text"
-                  placeholder="Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                  required
-                />
-              </div>
-              <div className="space-y-2">
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                  required
-                />
-              </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-                Login
-              </Button>
-            </form>
+              <TabsContent value="admin">
+                {error && (
+                  <Alert variant="destructive">
+                    <ExclamationTriangleIcon className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Input
+                      type="text"
+                      placeholder="Username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
+                    Login as Admin
+                  </Button>
+                </form>
+                <div className="mt-4 text-center text-sm text-gray-400">
+                  <p>Admin demo credentials:</p>
+                  <p>Username: admin / Password: admin123</p>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="client">
+                {error && (
+                  <Alert variant="destructive">
+                    <ExclamationTriangleIcon className="h-4 w-4" />
+                    <AlertDescription>{error}</AlertDescription>
+                  </Alert>
+                )}
+
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-2">
+                    <Input
+                      type="text"
+                      placeholder="Username"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Input
+                      type="password"
+                      placeholder="Password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
+                      required
+                    />
+                  </div>
+                  <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
+                    Login as Client
+                  </Button>
+                </form>
+                <div className="mt-4 text-center text-sm text-gray-400">
+                  <p>Client demo credentials:</p>
+                  <p>Username: client / Password: client123</p>
+                </div>
+              </TabsContent>
+            </Tabs>
           </div>
         </div>
       </div>

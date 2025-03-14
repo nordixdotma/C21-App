@@ -4,16 +4,22 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { DashboardHeader } from "@/components/dashboard/header"
 import { DashboardNav } from "@/components/dashboard/nav"
-import { ProjectsList } from "@/components/dashboard/projects-list"
+import { DashboardStats } from "@/components/dashboard/stats"
 import { Loader2 } from "lucide-react"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ProjectsList } from "@/components/dashboard/projects-list"
+import { UsersList } from "@/components/dashboard/users-list"
 
 export default function DashboardPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState("projects")
 
   useEffect(() => {
     const isAuthenticated = localStorage.getItem("isAuthenticated")
-    if (!isAuthenticated) {
+    const userRole = localStorage.getItem("userRole")
+
+    if (!isAuthenticated || userRole !== "admin") {
       router.push("/login")
     }
     setTimeout(() => setIsLoading(false), 500)
@@ -33,7 +39,22 @@ export default function DashboardPage() {
       <div className="flex-1">
         <DashboardHeader />
         <main className="p-6">
-          <ProjectsList />
+          <DashboardStats />
+
+          <div className="mt-8">
+            <Tabs defaultValue="projects" value={activeTab} onValueChange={setActiveTab}>
+              <TabsList>
+                <TabsTrigger value="projects">Properties</TabsTrigger>
+                <TabsTrigger value="users">User Management</TabsTrigger>
+              </TabsList>
+              <TabsContent value="projects" className="mt-6">
+                <ProjectsList />
+              </TabsContent>
+              <TabsContent value="users" className="mt-6">
+                <UsersList />
+              </TabsContent>
+            </Tabs>
+          </div>
         </main>
       </div>
     </div>
