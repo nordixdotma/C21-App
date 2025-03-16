@@ -31,21 +31,34 @@ export function NavDropdown({
   return (
     <div className="relative" onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       <button
-        className={`flex items-center gap-2 text-sm ${isScrolled ? "text-gray-900 hover:text-primary" : "text-white hover:text-primary"} py-1.5`}
+        className={`flex items-center gap-1.5 text-sm font-medium ${
+          isScrolled ? "text-gray-900 hover:text-primary" : "text-white hover:text-primary"
+        } py-1.5 transition-colors duration-200`}
       >
         {label}
-        <ChevronDown className={`h-3 w-3 ${isActive ? "text-primary" : "text-gray-500"}`} />
+        <ChevronDown
+          className={`h-3.5 w-3.5 transition-transform duration-200 ${
+            isActive ? "text-primary rotate-180" : "text-gray-500"
+          }`}
+        />
       </button>
       {isActive && (
-        <ul className="absolute top-full left-0 bg-white shadow-md rounded-md mt-1 z-10">
-          {items.map((item) => (
-            <li key={item.href} className="p-2 hover:text-primary">
-              <Link href={item.href} className="text-gray-900 hover:text-primary">
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <div className="absolute top-full left-0 pt-2 w-64 z-10">
+          <div className="bg-white rounded-md shadow-lg border border-gray-100 overflow-hidden">
+            <ul className="py-1">
+              {items.map((item) => (
+                <li key={item.href} className="hover:bg-gray-50">
+                  <Link
+                    href={item.href}
+                    className="block px-4 py-2.5 text-sm text-gray-800 hover:text-primary transition-colors duration-150"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       )}
     </div>
   )

@@ -130,6 +130,25 @@ export function HeroSection() {
             <TabButton active={activeTab === "rent"} onClick={() => setActiveTab("rent")} label="rent">
               Rent
             </TabButton>
+            <TabButton active={activeTab === "ferme"} onClick={() => setActiveTab("ferme")} label="ferme">
+              Ferme
+            </TabButton>
+            <TabButton active={activeTab === "bureau"} onClick={() => setActiveTab("bureau")} label="bureau">
+              Bureau
+            </TabButton>
+            <TabButton
+              active={activeTab === "commercial"}
+              onClick={() => setActiveTab("commercial")}
+              label="commercial"
+            >
+              Locaux Commerciaux
+            </TabButton>
+            <TabButton active={activeTab === "apart"} onClick={() => setActiveTab("apart")} label="apart">
+              Apart
+            </TabButton>
+            <TabButton active={activeTab === "villas"} onClick={() => setActiveTab("villas")} label="villas">
+              Villas
+            </TabButton>
           </div>
 
           <div

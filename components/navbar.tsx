@@ -9,16 +9,18 @@ import { NavLink, NavDropdown, MobileNavSection } from "@/components/navbar-comp
 import { useRouter } from "next/navigation"
 
 const buyMenuItems = [
-  { href: "/buy/houses", label: "Houses" },
-  { href: "/buy/apartments", label: "Apartments" },
-  { href: "/buy/villas", label: "Villas" },
-  { href: "/buy/commercial", label: "Commercial" },
+  { href: "/buy/houses", label: "Houses & Villas" },
+  { href: "/buy/apartments", label: "Apartments & Penthouses" },
+  { href: "/buy/commercial", label: "Commercial Properties" },
+  { href: "/buy/land", label: "Land & Plots" },
+  { href: "/buy/off-plan", label: "Off-Plan Projects" },
 ]
 
 const rentMenuItems = [
-  { href: "/rent/houses", label: "Houses" },
-  { href: "/rent/apartments", label: "Apartments" },
-  { href: "/rent/villas", label: "Villas" },
+  { href: "/rent/short-term", label: "Short-Term Rentals" },
+  { href: "/rent/long-term", label: "Long-Term Rentals" },
+  { href: "/rent/vacation", label: "Vacation Homes" },
+  { href: "/rent/commercial", label: "Commercial Spaces" },
 ]
 
 const moreMenuItems = [
@@ -67,7 +69,7 @@ export function Navbar() {
               size="sm"
               className={`rounded-full transition-all duration-300 ${
                 !isScrolled
-                  ? "text-white border-white hover:bg-white/10 backdrop-blur-sm bg-transparent"
+                  ? "text-white border-white hover:bg-primary/90 backdrop-blur-sm bg-transparent"
                   : "bg-primary text-white hover:bg-primary/90"
               }`}
               onClick={() => router.push("/login")}
@@ -94,6 +96,7 @@ export function Navbar() {
       <div className="max-w-[1170px] mx-auto px-4 lg:px-8">
         <nav className="h-12 md:h-14 hidden lg:flex items-center justify-center">
           <div className="flex items-center space-x-8 font-body">
+            <NavLink href="/new-projects" label="New Projects" isScrolled={isScrolled} />
             <NavDropdown
               label="Buy"
               items={buyMenuItems}
@@ -114,6 +117,10 @@ export function Navbar() {
             <NavLink href="/blog" label="Blog" isScrolled={isScrolled} />
             <NavLink href="/about" label="About" isScrolled={isScrolled} />
             <NavLink href="/contact" label="Contact" isScrolled={isScrolled} />
+            <NavLink href="/developers" label="Developers" isScrolled={isScrolled} />
+            <NavLink href="/services" label="Services" isScrolled={isScrolled} />
+            <NavLink href="/our-team" label="Our Team" isScrolled={isScrolled} />
+            <NavLink href="/career" label="Career" isScrolled={isScrolled} />
           </div>
         </nav>
       </div>
@@ -133,8 +140,33 @@ export function Navbar() {
         >
           <div className="p-5 overflow-y-auto h-full">
             <div className="flex flex-col space-y-5 font-body">
-              <MobileNavSection title="Buy" items={buyMenuItems} />
-              <MobileNavSection title="Rent" items={rentMenuItems} />
+              <Link href="/new-projects" className="text-gray-900 hover:text-primary py-1.5 text-base">
+                New Projects
+              </Link>
+              <div>
+                <h3 className="text-gray-900 font-medium text-base mb-2">Buy</h3>
+                <ul className="space-y-2 pl-1">
+                  {buyMenuItems.map((item) => (
+                    <li key={item.href}>
+                      <Link href={item.href} className="text-gray-700 hover:text-primary py-1.5 text-sm block">
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <h3 className="text-gray-900 font-medium text-base mb-2">Rent</h3>
+                <ul className="space-y-2 pl-1">
+                  {rentMenuItems.map((item) => (
+                    <li key={item.href}>
+                      <Link href={item.href} className="text-gray-700 hover:text-primary py-1.5 text-sm block">
+                        {item.label}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
               <Link href="/sell" className="text-gray-900 hover:text-primary py-1.5 text-base">
                 Sell
               </Link>
@@ -144,6 +176,18 @@ export function Navbar() {
               </Link>
               <Link href="/contact" className="text-gray-900 hover:text-primary py-1.5 text-base">
                 Contact
+              </Link>
+              <Link href="/developers" className="text-gray-900 hover:text-primary py-1.5 text-base">
+                Developers
+              </Link>
+              <Link href="/services" className="text-gray-900 hover:text-primary py-1.5 text-base">
+                Services
+              </Link>
+              <Link href="/our-team" className="text-gray-900 hover:text-primary py-1.5 text-base">
+                Our Team
+              </Link>
+              <Link href="/career" className="text-gray-900 hover:text-primary py-1.5 text-base">
+                Career
               </Link>
 
               {/* Mobile Contact Info */}
