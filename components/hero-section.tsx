@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Search } from "lucide-react"
@@ -20,6 +20,8 @@ export function HeroSection() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isTyping, setIsTyping] = useState(true)
   const [viewportHeight, setViewportHeight] = useState("100vh")
+  const [tabsWidth, setTabsWidth] = useState(0)
+  const tabsRef = useRef<HTMLDivElement>(null)
 
   // Effect to handle mobile viewport height
   useEffect(() => {
@@ -39,6 +41,24 @@ export function HeroSection() {
       window.removeEventListener("resize", updateViewportHeight)
     }
   }, [])
+
+  // Effect to measure tabs width
+  useEffect(() => {
+    if (tabsRef.current) {
+      const updateTabsWidth = () => {
+        if (tabsRef.current) {
+          setTabsWidth(tabsRef.current.offsetWidth)
+        }
+      }
+
+      updateTabsWidth()
+      window.addEventListener("resize", updateTabsWidth)
+
+      return () => {
+        window.removeEventListener("resize", updateTabsWidth)
+      }
+    }
+  }, [isLoaded])
 
   useEffect(() => {
     setIsLoaded(true)
@@ -120,6 +140,7 @@ export function HeroSection() {
           </div>
 
           <div
+            ref={tabsRef}
             className={`bg-white/10 backdrop-blur-sm p-1 sm:p-1.5 rounded-full mb-4 sm:mb-6 inline-flex transition-all duration-1000 delay-500 transform ${
               isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
             }`}
@@ -152,9 +173,10 @@ export function HeroSection() {
           </div>
 
           <div
-            className={`relative max-w-xl mx-auto transition-all duration-1000 delay-700 transform ${
+            className={`relative mx-auto transition-all duration-1000 delay-700 transform ${
               isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
             }`}
+            style={{ width: tabsWidth > 0 ? `${tabsWidth}px` : "auto", maxWidth: "100%" }}
           >
             <form onSubmit={handleSearch}>
               <Input
