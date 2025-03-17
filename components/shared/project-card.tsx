@@ -17,7 +17,7 @@ export function ProjectCard({ project, onHover }: ProjectCardProps) {
       onMouseLeave={() => onHover?.(null)}
       className="block"
     >
-      <div className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1 border border-gray-100">
+      <div className="group bg-black rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
         <div className="relative">
           <div className="aspect-[4/3] overflow-hidden">
             <Image
@@ -52,31 +52,31 @@ export function ProjectCard({ project, onHover }: ProjectCardProps) {
         </div>
 
         <div className="p-5">
-          <h3 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors line-clamp-1 mt-2">
+          <h3 className="font-bold text-lg mb-2 text-white group-hover:text-primary transition-colors line-clamp-1 mt-2">
             {project.name}
           </h3>
 
-          <div className="flex items-center text-gray-500 mb-3">
+          <div className="flex items-center text-gray-200 mb-3">
             <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
             <span className="text-sm line-clamp-1">{project.location}</span>
           </div>
 
-          <div className="flex items-center text-gray-500 mb-4">
+          <div className="flex items-center text-gray-200 mb-4">
             <Building2 className="h-4 w-4 mr-1 flex-shrink-0" />
             <span className="text-sm line-clamp-1">{project.developer}</span>
           </div>
 
           {/* Property features */}
           <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-            <div className="flex items-center text-gray-500">
+            <div className="flex items-center text-gray-200">
               <Bed className="h-4 w-4 mr-1" />
               <span className="text-xs">3-4</span>
             </div>
-            <div className="flex items-center text-gray-500">
+            <div className="flex items-center text-gray-200">
               <Bath className="h-4 w-4 mr-1" />
               <span className="text-xs">2-3</span>
             </div>
-            <div className="flex items-center text-gray-500">
+            <div className="flex items-center text-gray-200">
               <Square className="h-4 w-4 mr-1" />
               <span className="text-xs">120-250m²</span>
             </div>

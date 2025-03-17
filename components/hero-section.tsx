@@ -2,12 +2,13 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { cn } from "@/lib/utils"
 
 const phrases = ["Marrakech", "Hivernage", "Gueliz", "Palm Grove", "Agdal"]
 
@@ -20,28 +21,37 @@ export function HeroSection() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isTyping, setIsTyping] = useState(true)
   const [viewportHeight, setViewportHeight] = useState("100vh")
+  const heroRef = useRef<HTMLElement>(null)
 
   // Effect to handle mobile viewport height
   useEffect(() => {
     const updateViewportHeight = () => {
-      const vh = window.visualViewport?.height || window.innerHeight
-      setViewportHeight(`${vh}px`)
+      // Get the actual viewport height
+      const vh = window.innerHeight
+      // Set a slightly smaller height to account for mobile browser chrome
+      const adjustedHeight = Math.min(vh, window.innerWidth > 768 ? vh : vh * 0.9)
+      setViewportHeight(`${adjustedHeight}px`)
+
+      // Apply the height to the hero section
+      if (heroRef.current) {
+        heroRef.current.style.height = `${adjustedHeight}px`
+        heroRef.current.style.minHeight = `${adjustedHeight}px`
+      }
     }
 
+    // Initial update
     updateViewportHeight()
-    window.visualViewport?.addEventListener("resize", updateViewportHeight)
-    window.visualViewport?.addEventListener("scroll", updateViewportHeight)
-    window.addEventListener("resize", updateViewportHeight)
-
-    return () => {
-      window.visualViewport?.removeEventListener("resize", updateViewportHeight)
-      window.visualViewport?.removeEventListener("scroll", updateViewportHeight)
-      window.removeEventListener("resize", updateViewportHeight)
-    }
-  }, [])
-
-  useEffect(() => {
     setIsLoaded(true)
+
+    // Add event listeners
+    window.addEventListener("resize", updateViewportHeight)
+    window.addEventListener("orientationchange", updateViewportHeight)
+
+    // Cleanup
+    return () => {
+      window.removeEventListener("resize", updateViewportHeight)
+      window.removeEventListener("orientationchange", updateViewportHeight)
+    }
   }, [])
 
   // Typing animation effect
@@ -88,41 +98,49 @@ export function HeroSection() {
 
   return (
     <section
-      className="relative flex items-center"
+      ref={heroRef}
+      className="relative flex items-center overflow-hidden"
       style={{
-        minHeight: viewportHeight,
         height: viewportHeight,
       }}
     >
-      <div className="absolute inset-0">
+      {/* Background Image with Overlay */}
+      <div className="absolute inset-0 z-0">
         <Image
           src="/herobackground.jpg"
           alt="Luxury property in Marrakech"
           fill
           priority
-          className="object-cover"
+          className="object-cover object-center"
           quality={90}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70" />
       </div>
 
-      <div className="relative container mx-auto px-3 sm:px-4">
-        <div className="max-w-3xl mx-auto text-center pt-16 sm:pt-20 pb-6 sm:pb-8">
-          <div className="mb-4 sm:mb-6 space-y-4">
-            <h1
-              className={`font-heading text-lg sm:text-2xl md:text-3xl lg:text-4xl font-extrabold leading-tight font-barlow transition-all duration-1000 transform text-white ${
-                isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-              }`}
-            >
+      {/* Hero Content */}
+      <div className="relative z-10 container mx-auto px-4 sm:px-6">
+        <div className="max-w-3xl mx-auto text-center">
+          {/* Main Heading */}
+          <div
+            className={cn(
+              "mb-6 md:mb-8 transition-all duration-1000 transform",
+              isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0",
+            )}
+          >
+            <h1 className="font-noto text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold leading-tight text-white">
               Find Your Dream Property in{" "}
-              <span className="text-primary inline-block min-h-[1.5em]">{displayedPhrase}</span>
+              <span className="text-primary relative inline-block min-h-[1.5em]">
+                {displayedPhrase}
+              </span>
             </h1>
           </div>
 
+          {/* Tab Buttons */}
           <div
-            className={`bg-white/10 backdrop-blur-sm p-1 sm:p-1.5 rounded-full mb-4 sm:mb-6 inline-flex transition-all duration-1000 delay-500 transform ${
-              isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-            }`}
+            className={cn(
+              "bg-white/10 backdrop-blur-sm p-1 rounded-full mb-6 md:mb-8 inline-flex transition-all duration-1000 delay-300 transform",
+              isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0",
+            )}
           >
             <TabButton active={activeTab === "buy"} onClick={() => setActiveTab("buy")} label="buy">
               Buy
@@ -132,66 +150,91 @@ export function HeroSection() {
             </TabButton>
           </div>
 
+          {/* Search Form */}
           <div
-            className={`relative max-w-xl mx-auto transition-all duration-1000 delay-700 transform ${
-              isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0"
-            }`}
+            className={cn(
+              "relative max-w-xl mx-auto transition-all duration-1000 delay-500 transform",
+              isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0",
+            )}
           >
-            <form onSubmit={handleSearch}>
-              <Input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search by area or project name"
-                className="w-full h-10 sm:h-12 pl-4 sm:pl-6 pr-20 sm:pr-24 rounded-full text-sm sm:text-base bg-white/95 backdrop-blur-sm border-0 shadow-lg"
-              />
-              <Button
-                type="submit"
-                size="default"
-                className="absolute right-1 top-1 h-8 sm:h-10 px-3 sm:px-4 rounded-full bg-primary hover:bg-primary/90 text-xs sm:text-sm"
-              >
-                <Search className="h-3.5 w-3.5 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 hidden sm:block" />
-                <span>Search</span>
-              </Button>
+            <form onSubmit={handleSearch} className="relative">
+              <div className="relative flex items-center">
+                <Input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search by area or project name"
+                  className="w-full h-12 sm:h-14 pl-5 pr-24 rounded-full text-sm sm:text-base bg-white/95 backdrop-blur-sm border-0 shadow-lg focus:ring-2 focus:ring-primary/50"
+                />
+                <Button
+                  type="submit"
+                  size="default"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-10 sm:h-12 px-4 sm:px-6 rounded-full bg-primary hover:bg-primary/90 text-sm font-medium transition-all duration-300 shadow-md hover:shadow-lg"
+                >
+                  <Search className="h-4 w-4 sm:h-5 sm:w-5 mr-2 hidden sm:block" />
+                  <span>Search</span>
+                </Button>
+              </div>
             </form>
+
+            {/* Popular Searches */}
+            <div className="mt-4 flex flex-wrap justify-center gap-2 text-xs sm:text-sm text-white/80">
+              <span>Popular:</span>
+              {phrases.map((phrase, index) => (
+                <button
+                  key={phrase}
+                  onClick={() => {
+                    setSearchQuery(phrase)
+                    setActiveTab("buy")
+                  }}
+                  className="hover:text-primary transition-colors duration-300 flex items-center"
+                >
+                  {phrase}
+                  {index < phrases.length - 1 && <span className="mx-1">•</span>}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
+      </div>
 
-        {/* Trust Indicators */}
-        <div className="absolute -bottom-32 sm:-bottom-40 left-1/2 -translate-x-1/2 w-full max-w-xl mx-auto">
-          <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-4 mx-3 sm:mx-4 flex items-center gap-3 sm:gap-4">
-            <div className="flex items-center justify-around gap-1 sm:gap-4">
-              <div className="flex">
-                <div className="flex flex-col ml-5">
-                  <div className="flex">
-                    <img
-                      src="https://famproperties.com/assets/famproperties/images/reviews/Review-stars.png?v=1.1"
-                      loading="lazy"
-                      width="120"
-                      height="75"
-                      alt="Review stars"
-                      className="w-20 sm:w-24"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="text-center sm:text-left">
-                <p className="text-xs sm:text-sm md:text-base">
-                  It <span className="text-primary">Matters</span> which <span className="text-primary">Agency</span>{" "}
-                  you <span className="text-primary">Trust</span>
-                </p>
-              </div>
-            </div>
-            <div className="flex">
+      {/* Trust Indicators - Fixed positioning */}
+      <div
+        className={cn(
+          "absolute w-full max-w-xl left-1/2 -translate-x-1/2 transition-all duration-1000 delay-700 transform",
+          isLoaded ? "opacity-100" : "opacity-0",
+          "bottom-6 sm:bottom-8 md:bottom-10 lg:bottom-14 px-4",
+        )}
+      >
+        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-xl flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="flex-shrink-0">
               <img
-                src="https://famproperties.com/assets/famproperties/images/reviews/reviews-new.png?v=1.1"
+                src="https://famproperties.com/assets/famproperties/images/reviews/Review-stars.png?v=1.1"
                 loading="lazy"
-                width="80"
-                height="64"
-                alt="Reviews"
-                className="w-16 sm:w-20"
+                width="120"
+                height="75"
+                alt="Review stars"
+                className="w-16 sm:w-24"
               />
             </div>
+            <div className="text-center sm:text-left">
+              <p className="text-xs sm:text-sm md:text-base font-medium">
+                It <span className="text-primary font-semibold">Matters</span> which{" "}
+                <span className="text-primary font-semibold">Agency</span> you{" "}
+                <span className="text-primary font-semibold">Trust</span>
+              </p>
+            </div>
+          </div>
+          <div className="flex-shrink-0">
+            <img
+              src="https://famproperties.com/assets/famproperties/images/reviews/reviews-new.png?v=1.1"
+              loading="lazy"
+              width="80"
+              height="64"
+              alt="Reviews"
+              className="w-14 sm:w-20"
+            />
           </div>
         </div>
       </div>
@@ -214,9 +257,10 @@ function TabButton({
     <button
       aria-label={`Select ${label} tab`}
       onClick={onClick}
-      className={`px-3 sm:px-6 py-1.5 sm:py-2 rounded-full transition-all duration-300 text-xs sm:text-sm ${
-        active ? "bg-primary text-white shadow-lg scale-105" : "text-white hover:bg-white/10"
-      }`}
+      className={cn(
+        "px-4 sm:px-8 py-2 sm:py-3 rounded-full transition-all duration-300 text-sm sm:text-base font-medium",
+        active ? "bg-primary text-white shadow-lg scale-105" : "text-white hover:bg-white/20",
+      )}
     >
       {children}
     </button>

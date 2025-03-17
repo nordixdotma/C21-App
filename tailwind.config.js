@@ -53,11 +53,11 @@ module.exports = {
         },
       },
       fontFamily: {
-        typold: ["Typold", "Arial", "sans-serif"],
-        oakes: ["Oakes", "Arial", "sans-serif"],
-        barlow: ["Barlow", "Arial", "sans-serif"],
+        noto: ["var(--font-noto-sans-display)", "sans-serif"],
+        outfit: ["var(--font-outfit)", "sans-serif"],
       },
     },
   },
   plugins: [require("tailwindcss-animate")],
-};
+}
+

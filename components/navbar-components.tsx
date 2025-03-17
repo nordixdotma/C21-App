@@ -1,12 +1,18 @@
 "use client"
 import Link from "next/link"
 import { ChevronDown } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export function NavLink({ href, label, isScrolled }: { href: string; label: string; isScrolled: boolean }) {
   return (
     <Link
       href={href}
-      className={`text-sm ${isScrolled ? "text-gray-900 hover:text-primary" : "text-white hover:text-primary"} py-1.5`}
+      className={cn(
+        "text-base font-medium py-1.5 px-1 relative group",
+        isScrolled ? "text-gray-900" : "text-white",
+        "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:scale-x-0 after:origin-center after:transition-transform after:duration-300",
+        "hover:after:scale-x-100",
+      )}
     >
       {label}
     </Link>
@@ -29,37 +35,45 @@ export function NavDropdown({
   onMouseLeave: () => void
 }) {
   return (
-    <div className="relative" onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
+    <div className="relative z-50" onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       <button
-        className={`flex items-center gap-1.5 text-sm font-medium ${
-          isScrolled ? "text-gray-900 hover:text-primary" : "text-white hover:text-primary"
-        } py-1.5 transition-colors duration-200`}
+        className={cn(
+          "flex items-center gap-1.5 text-base font-medium py-1.5 px-1 transition-colors duration-200",
+          isScrolled ? "text-gray-900" : "text-white",
+          "after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-primary after:scale-x-0 after:origin-center after:transition-transform after:duration-300",
+          isActive ? "after:scale-x-100" : "hover:after:scale-x-100",
+        )}
       >
         {label}
         <ChevronDown
-          className={`h-3.5 w-3.5 transition-transform duration-200 ${
-            isActive ? "text-primary rotate-180" : "text-gray-500"
-          }`}
+          className={cn(
+            "h-4 w-4 transition-transform duration-200",
+            isActive ? "text-primary rotate-180" : "text-gray-500",
+          )}
         />
       </button>
-      {isActive && (
-        <div className="absolute top-full left-0 pt-2 w-64 z-10">
-          <div className="bg-white rounded-md shadow-lg border border-gray-100 overflow-hidden">
-            <ul className="py-1">
-              {items.map((item) => (
-                <li key={item.href} className="hover:bg-gray-50">
-                  <Link
-                    href={item.href}
-                    className="block px-4 py-2.5 text-sm text-gray-800 hover:text-primary transition-colors duration-150"
-                  >
-                    {item.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+
+      <div
+        className={cn(
+          "absolute top-full left-0 pt-2 w-64 transition-all duration-200",
+          isActive ? "opacity-100 visible" : "opacity-0 invisible",
+        )}
+      >
+        <div className="bg-white rounded-md shadow-lg border border-gray-100 overflow-hidden">
+          <ul className="py-1">
+            {items.map((item) => (
+              <li key={item.href} className="hover:bg-gray-50">
+                <Link
+                  href={item.href}
+                  className="block px-4 py-2.5 text-sm text-gray-800 hover:text-primary transition-colors duration-150"
+                >
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
-      )}
+      </div>
     </div>
   )
 }

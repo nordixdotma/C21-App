@@ -66,31 +66,13 @@
   }
 }
 
-/* Import custom fonts */
-@font-face {
-  font-family: "Typold";
-  src: url("/fonts/Typold-Extended-Medium.woff2") format("woff2");
-  font-weight: 500;
-  font-style: normal;
-}
+/* Replace the custom font imports with Google Fonts */
+/* Remove these @font-face blocks:*/
 
-@font-face {
-  font-family: "Oakes";
-  src: url("/fonts/Oakes-Regular.woff2") format("woff2");
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: "Barlow";
-  src: url("/fonts/Barlow-SemiCondensed-Regular.woff2") format("woff2");
-  font-weight: normal;
-  font-style: normal;
-}
-
+/* Update the base layer font classes */
 @layer base {
   body {
-    @apply font-oakes antialiased;
+    @apply font-outfit antialiased;
   }
 
   h1,
@@ -99,12 +81,28 @@
   h4,
   h5,
   h6 {
-    @apply font-typold font-medium tracking-tight;
+    @apply font-noto font-medium tracking-tight;
   }
 
   .legal-text,
   .numbers {
-    @apply font-barlow;
+    @apply font-outfit;
   }
+}
+
+@keyframes ping {
+  0% {
+    transform: scale(1);
+    opacity: 0.75;
+  }
+  75%,
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.animate-ping {
+  animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
 

@@ -11,12 +11,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons"
 
 // This would come from your backend in a real application
-const ADMIN_CREDENTIALS = {
-  username: "admin",
-  password: "admin123",
+const CLIENT_CREDENTIALS = {
+  username: "client",
+  password: "client123",
 }
 
-export default function AdminLoginPage() {
+export default function ClientLoginPage() {
   const router = useRouter()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
@@ -25,14 +25,14 @@ export default function AdminLoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+    if (username === CLIENT_CREDENTIALS.username && password === CLIENT_CREDENTIALS.password) {
       // In a real application, you would:
       // 1. Make an API call to verify credentials
       // 2. Receive and store a JWT token
       // 3. Set up proper session management
       localStorage.setItem("isAuthenticated", "true")
-      localStorage.setItem("userRole", "admin")
-      router.push("/dashboard")
+      localStorage.setItem("userRole", "client")
+      router.push("/client-dashboard")
     } else {
       setError("Invalid username or password")
     }
@@ -59,8 +59,8 @@ export default function AdminLoginPage() {
         <div className="lg:p-8">
           <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
             <div className="flex flex-col space-y-2 text-center">
-              <h1 className="text-2xl font-typold font-semibold tracking-tight text-white">Admin Login</h1>
-              <p className="text-sm font-oakes text-muted-foreground">Sign in to access the admin dashboard</p>
+              <h1 className="text-2xl font-typold font-semibold tracking-tight text-white">Espace Client</h1>
+              <p className="text-sm font-oakes text-muted-foreground">Connectez-vous à votre espace client</p>
             </div>
 
             {error && (
@@ -74,7 +74,7 @@ export default function AdminLoginPage() {
               <div className="space-y-2">
                 <Input
                   type="text"
-                  placeholder="Username"
+                  placeholder="Nom d'utilisateur"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
@@ -84,7 +84,7 @@ export default function AdminLoginPage() {
               <div className="space-y-2">
                 <Input
                   type="password"
-                  placeholder="Password"
+                  placeholder="Mot de passe"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
@@ -92,16 +92,16 @@ export default function AdminLoginPage() {
                 />
               </div>
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-                Login as Admin
+                Se connecter
               </Button>
             </form>
             <div className="mt-4 text-center text-sm text-gray-400">
-              <p>Admin demo credentials:</p>
-              <p>Username: admin / Password: admin123</p>
+              <p>Identifiants de démonstration:</p>
+              <p>Nom d'utilisateur: client / Mot de passe: client123</p>
             </div>
             <div className="text-center text-sm text-gray-400">
-              <a href="/client-login" className="text-primary hover:underline">
-                Client access
+              <a href="/login" className="text-primary hover:underline">
+                Accès administrateur
               </a>
             </div>
           </div>
