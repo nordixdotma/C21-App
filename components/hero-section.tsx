@@ -20,37 +20,70 @@ export function HeroSection() {
   const [displayedPhrase, setDisplayedPhrase] = useState("")
   const [activeIndex, setActiveIndex] = useState(0)
   const [isTyping, setIsTyping] = useState(true)
-  const [viewportHeight, setViewportHeight] = useState("100vh")
   const heroRef = useRef<HTMLElement>(null)
 
   // Effect to handle mobile viewport height
   useEffect(() => {
-    const updateViewportHeight = () => {
-      // Get the actual viewport height
-      const vh = window.innerHeight
-      // Set a slightly smaller height to account for mobile browser chrome
-      const adjustedHeight = Math.min(vh, window.innerWidth > 768 ? vh : vh * 0.9)
-      setViewportHeight(`${adjustedHeight}px`)
+    // Function to set the height of the hero section
+    const setHeroHeight = () => {
+      if (!heroRef.current) return
 
-      // Apply the height to the hero section
-      if (heroRef.current) {
-        heroRef.current.style.height = `${adjustedHeight}px`
-        heroRef.current.style.minHeight = `${adjustedHeight}px`
-      }
+      // Get the actual viewport height
+      const windowHeight = window.innerHeight
+
+      // Set the height directly on the element
+      heroRef.current.style.height = `${windowHeight}px`
+
+      // For debugging
+      console.log(`Setting hero height to: ${windowHeight}px`)
     }
 
-    // Initial update
-    updateViewportHeight()
-    setIsLoaded(true)
+    // Set initial height
+    setHeroHeight()
 
-    // Add event listeners
-    window.addEventListener("resize", updateViewportHeight)
-    window.addEventListener("orientationchange", updateViewportHeight)
+    // Set loaded state after a short delay to ensure proper rendering
+    setTimeout(() => setIsLoaded(true), 100)
+
+    // Add event listeners for resize and orientation change
+    window.addEventListener("resize", setHeroHeight)
+    window.addEventListener("orientationchange", () => {
+      // Add a small delay after orientation change to get the correct height
+      setTimeout(setHeroHeight, 100)
+    })
+
+    // On some mobile browsers, we need to handle scroll events too
+    // as the address bar can appear/disappear
+    window.addEventListener("scroll", setHeroHeight)
 
     // Cleanup
     return () => {
-      window.removeEventListener("resize", updateViewportHeight)
-      window.removeEventListener("orientationchange", updateViewportHeight)
+      window.removeEventListener("resize", setHeroHeight)
+      window.removeEventListener("orientationchange", setHeroHeight)
+      window.removeEventListener("scroll", setHeroHeight)
+    }
+  }, [])
+
+  // Add a resize observer for more reliable height updates
+  useEffect(() => {
+    if (!heroRef.current) return
+
+    // Create a ResizeObserver to watch for container size changes
+    const resizeObserver = new ResizeObserver(() => {
+      if (heroRef.current) {
+        const windowHeight = window.innerHeight
+        heroRef.current.style.height = `${windowHeight}px`
+      }
+    })
+
+    // Start observing the hero element
+    resizeObserver.observe(heroRef.current)
+
+    // Cleanup
+    return () => {
+      if (heroRef.current) {
+        resizeObserver.unobserve(heroRef.current)
+      }
+      resizeObserver.disconnect()
     }
   }, [])
 
@@ -100,9 +133,7 @@ export function HeroSection() {
     <section
       ref={heroRef}
       className="relative flex items-center overflow-hidden"
-      style={{
-        height: viewportHeight,
-      }}
+      style={{ height: "100vh" }} // Fallback height
     >
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
@@ -129,9 +160,7 @@ export function HeroSection() {
           >
             <h1 className="font-noto text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold leading-tight text-white">
               Find Your Dream Property in{" "}
-              <span className="text-primary relative inline-block min-h-[1.5em]">
-                {displayedPhrase}
-              </span>
+              <span className="text-primary relative inline-block min-h-[1.5em]">{displayedPhrase}</span>
             </h1>
           </div>
 

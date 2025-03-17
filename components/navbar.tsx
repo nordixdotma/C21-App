@@ -75,8 +75,13 @@ export function Navbar() {
       )}
     >
       {/* Upper Section */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6">
-        <div className="h-16 md:h-16 flex items-center justify-between border-b border-white/10">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4 lg:px-6">
+        <div
+          className={cn(
+            "h-16 md:h-16 flex items-center justify-between transition-all duration-300",
+            isScrolled ? "border-b border-gray-200" : "",
+          )}
+        >
           <Link href="/" className="flex items-center z-40 relative">
             <Image
               src="/C21 logo rbz.png"
