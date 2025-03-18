@@ -95,6 +95,13 @@ export function Navbar() {
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-4">
+            <Image
+              src="https://upload.wikimedia.org/wikipedia/commons/2/2c/Flag_of_Morocco.svg"
+              alt="Morocco Flag"
+              width={24}
+              height={16}
+              className="h-5 w-auto transition-all"
+            />
             <Button
               variant="outline"
               size="sm"
@@ -107,27 +114,6 @@ export function Navbar() {
               onClick={() => router.push("/client-login")}
             >
               Espace client
-            </Button>
-            <Image
-              src="https://upload.wikimedia.org/wikipedia/commons/2/2c/Flag_of_Morocco.svg"
-              alt="Morocco Flag"
-              width={24}
-              height={16}
-              className="h-5 w-auto transition-all"
-            />
-
-            <Button
-              variant="outline"
-              size="sm"
-              className={cn(
-                "rounded-full transition-all duration-300 text-sm font-medium",
-                !isScrolled
-                  ? "text-white border-white/80 hover:bg-primary backdrop-blur-sm bg-transparent"
-                  : "bg-primary/10 text-primary border-primary/20 hover:bg-primary hover:text-white",
-              )}
-              onClick={() => router.push("/login")}
-            >
-              Admin
             </Button>
           </div>
 
