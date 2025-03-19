@@ -9,7 +9,7 @@ export function ProjectVideo({ videoUrl, className }: ProjectVideoProps) {
   return (
     <div className={className}>
       <h2 className="text-2xl font-semibold mb-6">Property Video</h2>
-      <div className="relative aspect-video overflow-hidden rounded-lg">
+      <div className="relative aspect-video overflow-hidden rounded-lg border border-gray-200 hover:border-primary/50 hover:shadow-sm transition-all duration-200">
         <iframe
           src={videoUrl}
           title="Property Video"

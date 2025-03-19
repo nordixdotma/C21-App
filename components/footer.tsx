@@ -1,92 +1,159 @@
 import type React from "react"
+import Link from "next/link"
 import Image from "next/image"
-import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Twitter } from "lucide-react"
+import { Facebook, Instagram, Linkedin, Twitter, Mail, Phone, MapPin, ChevronRight } from "lucide-react"
+import { Button } from "@/components/ui/button"
 
-function SocialLink({ href, icon }: { href: string; icon: React.ReactNode }) {
+export function Footer() {
   return (
-    <a
-      href={href}
-      className="bg-gray-800 p-2 rounded-full hover:bg-primary hover:text-white transition-colors"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      {icon}
-    </a>
+    <footer className="bg-black text-white">
+      {/* Main Footer */}
+      <div className="container mx-auto px-4 pt-16 pb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {/* Column 1: About & Contact */}
+          <div className="space-y-6">
+            <Link href="/" className="inline-block">
+              <Image src="/C21 logo rbz.png" alt="CENTURY 21" width={120} height={60} className="w-32" />
+            </Link>
+            <p className="text-gray-300 text-sm leading-relaxed">
+              Your trusted partner in real estate, providing exceptional service and expertise in Marrakech since 2005.
+            </p>
+            <div className="space-y-3">
+              <a
+                href="tel:+212664722488"
+                className="flex items-center gap-3 text-gray-300 hover:text-primary transition-colors"
+              >
+                <Phone className="h-4 w-4 text-primary" />
+                <span className="text-sm">06.64.72.24.88</span>
+              </a>
+              <a
+                href="mailto:Q.huaux@areis.ma"
+                className="flex items-center gap-3 text-gray-300 hover:text-primary transition-colors"
+              >
+                <Mail className="h-4 w-4 text-primary" />
+                <span className="text-sm">Q.huaux@areis.ma</span>
+              </a>
+              <div className="flex items-start gap-3 text-gray-300">
+                <MapPin className="h-4 w-4 text-primary mt-1" />
+                <p className="text-sm">123 Business Avenue, Hivernage, Marrakech, Morocco</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 2: Quick Links */}
+          <div>
+            <h3 className="text-lg font-bold mb-6 relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-12 after:bg-primary after:-mb-2">
+              Quick Links
+            </h3>
+            <div className="grid grid-cols-2 gap-x-4 gap-y-3">
+              <FooterLink href="/new-projects">New Projects</FooterLink>
+              <FooterLink href="/buy/houses">Buy</FooterLink>
+              <FooterLink href="/rent/apartments">Rent</FooterLink>
+              <FooterLink href="/sell">Sell</FooterLink>
+              <FooterLink href="/blog">Blog</FooterLink>
+              <FooterLink href="/about">About</FooterLink>
+              <FooterLink href="/contact">Contact</FooterLink>
+              <FooterLink href="/developers">Developers</FooterLink>
+              <FooterLink href="/services">Services</FooterLink>
+              <FooterLink href="/our-team">Our Team</FooterLink>
+              <FooterLink href="/career">Career</FooterLink>
+            </div>
+          </div>
+
+          {/* Column 3: Property Types */}
+          <div>
+            <h3 className="text-lg font-bold mb-6 relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-12 after:bg-primary after:-mb-2">
+              Property Types
+            </h3>
+            <ul className="space-y-3">
+              <FooterLink href="/buy/apartments">Apartments</FooterLink>
+              <FooterLink href="/buy/villas">Villas</FooterLink>
+              <FooterLink href="/buy/houses">Houses</FooterLink>
+              <FooterLink href="/buy/commercial">Commercial</FooterLink>
+              <FooterLink href="/buy/land">Land</FooterLink>
+              <FooterLink href="/buy/off-plan">Off-Plan Projects</FooterLink>
+            </ul>
+          </div>
+
+          {/* Column 4: Newsletter */}
+          <div>
+            <h3 className="text-lg font-bold mb-6 relative after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-12 after:bg-primary after:-mb-2">
+              Newsletter
+            </h3>
+            <p className="text-gray-300 text-sm mb-4">
+              Subscribe to our newsletter for exclusive property listings and market updates.
+            </p>
+            <div className="space-y-3">
+              <input
+                type="email"
+                placeholder="Your email address"
+                className="w-full px-4 py-2.5 bg-white/10 border border-white/20 rounded-md text-white placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <Button className="w-full bg-primary hover:bg-primary/90 text-white">
+                Subscribe
+                <ChevronRight className="ml-2 h-4 w-4" />
+              </Button>
+            </div>
+            <div className="mt-6">
+              <h4 className="text-sm font-semibold mb-3">Follow Us</h4>
+              <div className="flex space-x-3">
+                <SocialLink href="#" icon={<Facebook className="h-4 w-4" />} />
+                <SocialLink href="#" icon={<Twitter className="h-4 w-4" />} />
+                <SocialLink href="#" icon={<Instagram className="h-4 w-4" />} />
+                <SocialLink href="#" icon={<Linkedin className="h-4 w-4" />} />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Footer */}
+      <div className="border-t border-gray-800">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex flex-col md:flex-row justify-between items-center">
+            <p className="text-gray-400 text-xs md:text-sm">
+              © {new Date().getFullYear()} CENTURY 21®. All rights reserved.
+            </p>
+            <div className="flex flex-wrap gap-4 mt-4 md:mt-0">
+              <Link href="/privacy-policy" className="text-gray-400 hover:text-primary text-xs md:text-sm">
+                Privacy Policy
+              </Link>
+              <Link href="/terms-of-service" className="text-gray-400 hover:text-primary text-xs md:text-sm">
+                Terms of Service
+              </Link>
+              <Link href="/sitemap" className="text-gray-400 hover:text-primary text-xs md:text-sm">
+                Sitemap
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </footer>
   )
 }
 
 function FooterLink({ href, children }: { href: string; children: React.ReactNode }) {
   return (
-    <li>
-      <a href={href} className="text-gray-300 hover:text-primary transition-colors">
-        {children}
-      </a>
-    </li>
+    <Link
+      href={href}
+      className="text-gray-300 hover:text-primary transition-colors duration-200 text-sm flex items-center"
+    >
+      <ChevronRight className="h-3.5 w-3.5 mr-1.5 text-primary" />
+      {children}
+    </Link>
   )
 }
 
-export function Footer() {
+function SocialLink({ href, icon }: { href: string; icon: React.ReactNode }) {
   return (
-    <footer className="bg-black text-white pt-12 md:pt-16 pb-8 mt-16">
-      <div className="max-w-[1170px] mx-auto px-4">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12 mb-8 md:mb-12">
-          <div>
-            <Image src="/C21 logo rbz.png" alt="CENTURY 21" width={120} height={60} className="mb-6 w-24 sm:w-32" />
-            <p className="font-body text-gray-100 mb-6 text-sm sm:text-base">
-              Your trusted partner in real estate, providing exceptional service and expertise since 2005.
-            </p>
-            <div className="flex space-x-4">
-              <SocialLink href="#" icon={<Facebook className="h-4 w-4 sm:h-5 sm:w-5" />} />
-              <SocialLink href="#" icon={<Twitter className="h-4 w-4 sm:h-5 sm:w-5" />} />
-              <SocialLink href="#" icon={<Instagram className="h-4 w-4 sm:h-5 sm:w-5" />} />
-              <SocialLink href="#" icon={<Linkedin className="h-4 w-4 sm:h-5 sm:w-5" />} />
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-heading text-base sm:text-lg font-bold mb-4 sm:mb-6">Quick Links</h3>
-            <ul className="space-y-3 sm:space-y-4">
-              <FooterLink href="/about">About Us</FooterLink>
-              <FooterLink href="/properties">Properties</FooterLink>
-              <FooterLink href="/agents">Agents</FooterLink>
-              <FooterLink href="/blog">Blog</FooterLink>
-              <FooterLink href="/contact">Contact</FooterLink>
-            </ul>
-          </div>
-
-          <div>
-            <h3 className="font-heading text-base sm:text-lg font-bold mb-4 sm:mb-6">Contact Info</h3>
-            <div className="space-y-3 sm:space-y-4">
-              <a href="tel:+212664722488" className="flex items-center gap-3 text-gray-300 hover:text-primary">
-                <Phone className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-sm sm:text-base">06.64.72.24.88</span>
-              </a>
-              <a href="mailto:Q.huaux@areis.ma" className="flex items-center gap-3 text-gray-300 hover:text-primary">
-                <Mail className="h-4 w-4 sm:h-5 sm:w-5" />
-                <span className="text-sm sm:text-base">Q.huaux@areis.ma</span>
-              </a>
-              <div className="flex items-start gap-3 text-gray-300">
-                <MapPin className="h-4 w-4 sm:h-5 sm:w-5 mt-1" />
-                <p className="text-sm sm:text-base">123 Business Avenue, Marrakech, Morocco</p>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <h3 className="font-heading text-base sm:text-lg font-bold mb-4 sm:mb-6">Working Hours</h3>
-            <div className="font-body space-y-3 sm:space-y-4 text-gray-300 text-sm sm:text-base">
-              <p>Monday - Friday: 9:00 AM - 6:00 PM</p>
-              <p>Saturday: 10:00 AM - 4:00 PM</p>
-              <p>Sunday: Closed</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="border-t pt-6 sm:pt-8 text-center text-xs sm:text-sm text-gray-300 font-body">
-          <p>© {new Date().getFullYear()} CENTURY 21®. All rights reserved.</p>
-        </div>
-      </div>
-    </footer>
+    <a
+      href={href}
+      className="bg-white/10 hover:bg-primary p-2 rounded-full transition-colors duration-200"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      {icon}
+    </a>
   )
 }
 

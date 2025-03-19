@@ -7,7 +7,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { Phone, Mail, Send } from "lucide-react"
+import { Phone, Mail, Send, Check, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 interface ContactSidebarProps {
@@ -21,19 +21,45 @@ export function ContactSidebar({ className }: ContactSidebarProps) {
     phone: "",
     message: "",
   })
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSubmitted, setIsSubmitted] = useState(false)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Form submitted:", formData)
-    // Handle form submission
+    setIsSubmitting(true)
+
+    // Simulate API call
+    setTimeout(() => {
+      console.log("Form submitted:", formData)
+      setIsSubmitting(false)
+      setIsSubmitted(true)
+
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        setIsSubmitted(false)
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          message: "",
+        })
+      }, 3000)
+    }, 1500)
   }
 
   return (
     <div className={cn("rounded-xl border bg-white p-6 shadow-sm", className)}>
       <div className="mb-6 flex items-center gap-4">
-        <Image src="https://th.bing.com/th/id/OIP.ZP-E8ZFH11wb1XSm0dn-5wHaJQ?rs=1&pid=ImgDetMain" alt="Agent" width={60} height={60} className="rounded-full" />
+        <div className="relative h-16 w-16 overflow-hidden rounded-full border-2 border-primary/20">
+          <Image
+            src="https://th.bing.com/th/id/OIP.ZP-E8ZFH11wb1XSm0dn-5wHaJQ?rs=1&pid=ImgDetMain"
+            alt="Agent"
+            fill
+            className="object-cover"
+          />
+        </div>
         <div>
-          <h3 className="font-semibold">sadghi mhamdi</h3>
+          <h3 className="font-semibold text-lg">Sadghi Mhamdi</h3>
           <p className="text-sm text-gray-600">Real Estate Agent</p>
         </div>
       </div>
@@ -41,16 +67,20 @@ export function ContactSidebar({ className }: ContactSidebarProps) {
       <div className="mb-6 space-y-3">
         <a
           href="tel:+212664722488"
-          className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-gray-50"
+          className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-gray-50 hover:border-primary/50"
         >
-          <Phone className="h-5 w-5 text-primary" />
+          <div className="bg-primary/10 p-2 rounded-full">
+            <Phone className="h-4 w-4 text-primary" />
+          </div>
           <span>06.64.72.24.88</span>
         </a>
         <a
           href="mailto:contact@example.com"
-          className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-gray-50"
+          className="flex items-center gap-3 rounded-lg border p-3 transition-colors hover:bg-gray-50 hover:border-primary/50"
         >
-          <Mail className="h-5 w-5 text-primary" />
+          <div className="bg-primary/10 p-2 rounded-full">
+            <Mail className="h-4 w-4 text-primary" />
+          </div>
           <span>contact@example.com</span>
         </a>
       </div>
@@ -67,39 +97,66 @@ export function ContactSidebar({ className }: ContactSidebarProps) {
         Contact on WhatsApp
       </a>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <Input
-          placeholder="Your Name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          required
-        />
-        <Input
-          type="email"
-          placeholder="Your Email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          required
-        />
-        <Input
-          type="tel"
-          placeholder="Your Phone"
-          value={formData.phone}
-          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-          required
-        />
-        <Textarea
-          placeholder="Your Message"
-          value={formData.message}
-          onChange={(e) => setFormData({ ...formData, message: e.target.value })}
-          required
-          rows={4}
-        />
-        <Button type="submit" className="w-full">
-          <Send className="mr-2 h-4 w-4" />
-          Send Message
-        </Button>
-      </form>
+      {isSubmitted ? (
+        <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-center">
+          <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-green-100">
+            <Check className="h-6 w-6 text-green-600" />
+          </div>
+          <h4 className="text-lg font-medium text-green-800">Message Sent!</h4>
+          <p className="mt-1 text-sm text-green-600">Thank you for your message. We'll get back to you shortly.</p>
+        </div>
+      ) : (
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <Input
+            placeholder="Your Name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            required
+            disabled={isSubmitting}
+            className="border-gray-300 focus:border-primary"
+          />
+          <Input
+            type="email"
+            placeholder="Your Email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            required
+            disabled={isSubmitting}
+            className="border-gray-300 focus:border-primary"
+          />
+          <Input
+            type="tel"
+            placeholder="Your Phone"
+            value={formData.phone}
+            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            required
+            disabled={isSubmitting}
+            className="border-gray-300 focus:border-primary"
+          />
+          <Textarea
+            placeholder="Your Message"
+            value={formData.message}
+            onChange={(e) => setFormData({ ...formData, message: e.target.value })}
+            required
+            rows={4}
+            disabled={isSubmitting}
+            className="border-gray-300 focus:border-primary resize-none"
+          />
+          <Button type="submit" className="w-full" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                <Send className="mr-2 h-4 w-4" />
+                Send Message
+              </>
+            )}
+          </Button>
+        </form>
+      )}
     </div>
   )
 }

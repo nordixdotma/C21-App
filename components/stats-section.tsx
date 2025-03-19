@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react"
 import { stats } from "@/lib/constants"
+import { cn } from "@/lib/utils"
 
 function useCountAnimation(end: number, duration = 2000) {
   const [count, setCount] = useState(0)
@@ -49,7 +50,7 @@ function useCountAnimation(end: number, duration = 2000) {
   return { count, ref: countRef }
 }
 
-function StatItem({ value, label }: { value: string; label: string }) {
+function StatItem({ value, label, index }: { value: string; label: string; index: number }) {
   // Extract the number from the string (e.g., "100+" -> 100)
   const numberValue = Number.parseInt(value.replace(/\D/g, ""))
   const suffix = value.replace(/[0-9]/g, "")
@@ -57,23 +58,32 @@ function StatItem({ value, label }: { value: string; label: string }) {
   const { count, ref } = useCountAnimation(numberValue)
 
   return (
-    <div className="text-center" ref={ref}>
-      <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold text-primary mb-1 sm:mb-2">
-        {count}
-        {suffix}
-      </h3>
-      <p className="text-xs sm:text-sm md:text-base text-gray-600 font-medium">{label}</p>
+    <div
+      className={cn("text-center transform transition-all duration-700", "hover:scale-105")}
+      ref={ref}
+      style={{
+        transitionDelay: `${index * 100}ms`,
+      }}
+    >
+      <div className="relative">
+        <h3 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-primary mb-2">
+          {count}
+          {suffix}
+        </h3>
+        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-12 h-1 bg-primary/30 rounded-full"></div>
+      </div>
+      <p className="text-sm sm:text-base md:text-lg text-gray-700 font-medium mt-4">{label}</p>
     </div>
   )
 }
 
 export function StatsSection() {
   return (
-    <section className="py-10 sm:py-16 md:py-24">
-      <div className="max-w-[1170px] mx-auto px-3 sm:px-4">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6 md:gap-12">
+    <section className="py-16 sm:py-20 md:py-24 bg-gray-50">
+      <div className="max-w-[1170px] mx-auto px-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
           {stats.map((stat, index) => (
-            <StatItem key={index} value={stat.value} label={stat.label} />
+            <StatItem key={index} value={stat.value} label={stat.label} index={index} />
           ))}
         </div>
       </div>

@@ -22,69 +22,9 @@ export function HeroSection() {
   const [isTyping, setIsTyping] = useState(true)
   const heroRef = useRef<HTMLElement>(null)
 
-  // Effect to handle mobile viewport height
+  // Set initial loaded state
   useEffect(() => {
-    // Function to set the height of the hero section
-    const setHeroHeight = () => {
-      if (!heroRef.current) return
-
-      // Get the actual viewport height
-      const windowHeight = window.innerHeight
-
-      // Set the height directly on the element
-      heroRef.current.style.height = `${windowHeight}px`
-
-      // For debugging
-      console.log(`Setting hero height to: ${windowHeight}px`)
-    }
-
-    // Set initial height
-    setHeroHeight()
-
-    // Set loaded state after a short delay to ensure proper rendering
     setTimeout(() => setIsLoaded(true), 100)
-
-    // Add event listeners for resize and orientation change
-    window.addEventListener("resize", setHeroHeight)
-    window.addEventListener("orientationchange", () => {
-      // Add a small delay after orientation change to get the correct height
-      setTimeout(setHeroHeight, 100)
-    })
-
-    // On some mobile browsers, we need to handle scroll events too
-    // as the address bar can appear/disappear
-    window.addEventListener("scroll", setHeroHeight)
-
-    // Cleanup
-    return () => {
-      window.removeEventListener("resize", setHeroHeight)
-      window.removeEventListener("orientationchange", setHeroHeight)
-      window.removeEventListener("scroll", setHeroHeight)
-    }
-  }, [])
-
-  // Add a resize observer for more reliable height updates
-  useEffect(() => {
-    if (!heroRef.current) return
-
-    // Create a ResizeObserver to watch for container size changes
-    const resizeObserver = new ResizeObserver(() => {
-      if (heroRef.current) {
-        const windowHeight = window.innerHeight
-        heroRef.current.style.height = `${windowHeight}px`
-      }
-    })
-
-    // Start observing the hero element
-    resizeObserver.observe(heroRef.current)
-
-    // Cleanup
-    return () => {
-      if (heroRef.current) {
-        resizeObserver.unobserve(heroRef.current)
-      }
-      resizeObserver.disconnect()
-    }
   }, [])
 
   // Typing animation effect
@@ -121,6 +61,30 @@ export function HeroSection() {
     }
   }, [activeIndex, displayedPhrase, isTyping])
 
+  // Handle mobile browser viewport height issues
+  useEffect(() => {
+    const handleResize = () => {
+      // Set a custom property for viewport height that accounts for mobile browser UI
+      const vh = window.innerHeight * 0.01
+      document.documentElement.style.setProperty("--vh", `${vh}px`)
+    }
+
+    // Initial call
+    handleResize()
+
+    // Add event listeners
+    window.addEventListener("resize", handleResize)
+    window.addEventListener("orientationchange", () => {
+      // Small delay to ensure correct height after orientation change
+      setTimeout(handleResize, 100)
+    })
+
+    return () => {
+      window.removeEventListener("resize", handleResize)
+      window.removeEventListener("orientationchange", handleResize)
+    }
+  }, [])
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     const searchParams = new URLSearchParams()
@@ -132,8 +96,8 @@ export function HeroSection() {
   return (
     <section
       ref={heroRef}
-      className="relative flex items-center overflow-hidden"
-      style={{ height: "100vh" }} // Fallback height
+      className="relative h-screen flex items-center justify-center overflow-hidden"
+      style={{ height: "calc(var(--vh, 1vh) * 100)" }} // Using svh (small viewport height) for better mobile support
     >
       {/* Background Image with Overlay */}
       <div className="absolute inset-0 z-0">
@@ -146,19 +110,20 @@ export function HeroSection() {
           quality={90}
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70" />
+        <div className="absolute inset-0 bg-[url('/grid.png')] opacity-20" />
       </div>
 
       {/* Hero Content */}
-      <div className="relative z-10 container mx-auto px-4 sm:px-6">
+      <div className="relative z-10 container mx-auto px-4 sm:px-6 py-16 md:py-24">
         <div className="max-w-3xl mx-auto text-center">
           {/* Main Heading */}
           <div
             className={cn(
-              "mb-6 md:mb-8 transition-all duration-1000 transform",
+              "mb-8 transition-all duration-1000 transform",
               isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0",
             )}
           >
-            <h1 className="font-noto text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold leading-tight text-white">
+            <h1 className="text-2xl sm:text-3xl md:text-3xl lg:text-4xl font-bold leading-tight text-white">
               Find Your Dream Property in{" "}
               <span className="text-primary relative inline-block min-h-[1.5em]">{displayedPhrase}</span>
             </h1>
@@ -167,7 +132,7 @@ export function HeroSection() {
           {/* Tab Buttons */}
           <div
             className={cn(
-              "bg-white/10 backdrop-blur-sm p-1 rounded-full mb-6 md:mb-8 inline-flex transition-all duration-1000 delay-300 transform",
+              "bg-white/10 backdrop-blur-sm p-1 rounded-full mb-8 inline-flex transition-all duration-1000 delay-300 transform",
               isLoaded ? "translate-y-0 opacity-100" : "translate-y-10 opacity-0",
             )}
           >
@@ -227,43 +192,38 @@ export function HeroSection() {
         </div>
       </div>
 
-      {/* Trust Indicators - Fixed positioning */}
+      {/* Trust Indicators */}
       <div
         className={cn(
-          "absolute w-full max-w-xl left-1/2 -translate-x-1/2 transition-all duration-1000 delay-700 transform",
+          "absolute w-full max-w-xl left-1/2 -translate-x-1/2 transition-all duration-1000 delay-800",
           isLoaded ? "opacity-100" : "opacity-0",
-          "bottom-6 sm:bottom-8 md:bottom-10 lg:bottom-14 px-4",
+          "bottom-8 px-4",
         )}
       >
-        <div className="bg-white rounded-xl sm:rounded-2xl p-3 sm:p-5 shadow-xl flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 sm:gap-4">
-            <div className="flex-shrink-0">
-              <img
-                src="https://famproperties.com/assets/famproperties/images/reviews/Review-stars.png?v=1.1"
-                loading="lazy"
-                width="120"
-                height="75"
-                alt="Review stars"
-                className="w-16 sm:w-24"
-              />
+        <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 shadow-xl border border-white/20">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-shrink-0">
+                <div className="flex">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <svg key={star} className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                  ))}
+                </div>
+                <p className="text-xs text-white mt-1">500+ Reviews</p>
+              </div>
+              <div className="text-center text-white">
+                <p className="text-sm font-medium">
+                  It <span className="text-primary font-semibold">Matters</span> which{" "}
+                  <span className="text-primary font-semibold">Agency</span> you{" "}
+                  <span className="text-primary font-semibold">Trust</span>
+                </p>
+              </div>
             </div>
-            <div className="text-center sm:text-left">
-              <p className="text-xs sm:text-sm md:text-base font-medium">
-                It <span className="text-primary font-semibold">Matters</span> which{" "}
-                <span className="text-primary font-semibold">Agency</span> you{" "}
-                <span className="text-primary font-semibold">Trust</span>
-              </p>
+            <div className="hidden sm:block">
+              <Image src="/C21 logo rbz.png" alt="CENTURY 21" width={60} height={30} className="h-8 w-auto" />
             </div>
-          </div>
-          <div className="flex-shrink-0">
-            <img
-              src="https://famproperties.com/assets/famproperties/images/reviews/reviews-new.png?v=1.1"
-              loading="lazy"
-              width="80"
-              height="64"
-              alt="Reviews"
-              className="w-14 sm:w-20"
-            />
           </div>
         </div>
       </div>

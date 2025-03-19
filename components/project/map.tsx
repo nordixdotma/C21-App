@@ -15,7 +15,7 @@ export function ProjectMap({ latitude, longitude, className }: ProjectMapProps) 
   return (
     <div className={className}>
       <h2 className="text-2xl font-semibold mb-6">Map Location</h2>
-      <div className="h-[400px] border border-gray-200">
+      <div className="h-[400px] border border-gray-200 rounded-lg overflow-hidden hover:border-primary/50 hover:shadow-sm transition-all duration-200">
         <LeafletMap latitude={latitude} longitude={longitude} />
       </div>
     </div>
