@@ -25,6 +25,8 @@ const initialUsers = [
     name: "John Smith",
     email: "john.smith@example.com",
     phone: "+212 612 345 678",
+    username: "johnsmith",
+    password: "password123",
     role: "client",
     status: "active",
     properties: 3,
@@ -34,6 +36,8 @@ const initialUsers = [
     name: "Sarah Johnson",
     email: "sarah.johnson@example.com",
     phone: "+212 623 456 789",
+    username: "sarahj",
+    password: "password123",
     role: "client",
     status: "active",
     properties: 1,
@@ -43,6 +47,8 @@ const initialUsers = [
     name: "Mohammed Al Fasi",
     email: "mohammed.alfasi@example.com",
     phone: "+212 634 567 890",
+    username: "mohammedf",
+    password: "password123",
     role: "client",
     status: "inactive",
     properties: 2,
@@ -52,6 +58,8 @@ const initialUsers = [
     name: "Fatima Zahra",
     email: "fatima.zahra@example.com",
     phone: "+212 645 678 901",
+    username: "fatimaz",
+    password: "password123",
     role: "client",
     status: "active",
     properties: 0,
@@ -61,6 +69,8 @@ const initialUsers = [
     name: "Robert Chen",
     email: "robert.chen@example.com",
     phone: "+212 656 789 012",
+    username: "robertc",
+    password: "password123",
     role: "agent",
     status: "active",
     properties: 12,
@@ -77,6 +87,8 @@ export function UsersList() {
     name: "",
     email: "",
     phone: "",
+    username: "",
+    password: "",
     role: "client",
     status: "active",
   })
@@ -95,6 +107,8 @@ export function UsersList() {
       name: "",
       email: "",
       phone: "",
+      username: "",
+      password: "",
       role: "client",
       status: "active",
     })
@@ -181,6 +195,29 @@ export function UsersList() {
                   />
                 </div>
                 <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="username" className="text-right">
+                    Username
+                  </Label>
+                  <Input
+                    id="username"
+                    value={newUser.username}
+                    onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <Label htmlFor="password" className="text-right">
+                    Password
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={newUser.password}
+                    onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
+                    className="col-span-3"
+                  />
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="role" className="text-right">
                     Role
                   </Label>
@@ -229,6 +266,7 @@ export function UsersList() {
                 <th className="px-4 py-3 text-left font-typold text-sm">Name</th>
                 <th className="px-4 py-3 text-left font-typold text-sm">Email</th>
                 <th className="px-4 py-3 text-left font-typold text-sm">Phone</th>
+                <th className="px-4 py-3 text-left font-typold text-sm">Username</th>
                 <th className="px-4 py-3 text-left font-typold text-sm">Role</th>
                 <th className="px-4 py-3 text-left font-typold text-sm">Status</th>
                 <th className="px-4 py-3 text-left font-typold text-sm">Properties</th>
@@ -251,6 +289,7 @@ export function UsersList() {
                       {user.phone}
                     </div>
                   </td>
+                  <td className="px-4 py-3 text-gray-600">{user.username}</td>
                   <td className="px-4 py-3">
                     <Badge
                       variant={user.role === "admin" ? "default" : user.role === "agent" ? "secondary" : "outline"}
@@ -345,6 +384,29 @@ export function UsersList() {
                   id="edit-phone"
                   value={currentUser.phone}
                   onChange={(e) => setCurrentUser({ ...currentUser, phone: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-username" className="text-right">
+                  Username
+                </Label>
+                <Input
+                  id="edit-username"
+                  value={currentUser.username}
+                  onChange={(e) => setCurrentUser({ ...currentUser, username: e.target.value })}
+                  className="col-span-3"
+                />
+              </div>
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="edit-password" className="text-right">
+                  Password
+                </Label>
+                <Input
+                  id="edit-password"
+                  type="password"
+                  placeholder="Leave blank to keep current password"
+                  onChange={(e) => setCurrentUser({ ...currentUser, password: e.target.value })}
                   className="col-span-3"
                 />
               </div>

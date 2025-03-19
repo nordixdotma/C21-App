@@ -1,36 +1,46 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { LogOut, User } from "lucide-react"
-import Image from "next/image"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Bell, HelpCircle, LogOut } from "lucide-react"
+import { useRouter } from "next/navigation"
 
-export function ClientDashboardHeader() {
+interface ClientDashboardHeaderProps {
+  username: string
+}
+
+export function ClientDashboardHeader({ username }: ClientDashboardHeaderProps) {
   const router = useRouter()
 
   const handleLogout = () => {
     localStorage.removeItem("isAuthenticated")
     localStorage.removeItem("userRole")
+    localStorage.removeItem("username")
     router.push("/client-login")
   }
 
+  // Get first letter of username for avatar fallback
+  const avatarInitial = username ? username.charAt(0).toUpperCase() : "U"
+
   return (
-    <header className="border-b bg-white">
-      <div className="flex h-16 items-center justify-between px-6">
+    <header className="sticky top-0 z-10 flex h-16 items-center justify-between border-b bg-white px-6">
+      <div className="flex items-center gap-4">
+        <h1 className="text-xl font-semibold">Client Dashboard</h1>
+      </div>
+      <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Image src="/C21 logo rbz.png" alt="CENTURY 21" width={40} height={20} className="h-8 w-auto" />
-          <h2 className="font-typold text-lg font-semibold">Espace Client</h2>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="flex items-center gap-2 text-sm text-gray-600">
-            <User className="h-4 w-4 text-primary" />
-            <span>Client Demo</span>
+          <Avatar>
+            <AvatarImage src="" alt={username} />
+            <AvatarFallback>{avatarInitial}</AvatarFallback>
+          </Avatar>
+          <div>
+            <p className="text-sm font-medium">{username}</p>
           </div>
-          <Button variant="ghost" onClick={handleLogout} className="text-red-500 hover:text-red-600 hover:bg-red-50">
-            <LogOut className="mr-2 h-4 w-4" />
-            Logout
-          </Button>
         </div>
+        <Button variant="ghost" onClick={handleLogout} className="text-red-500 hover:text-red-600 hover:bg-red-50">
+          <LogOut className="mr-2 h-4 w-4" />
+          Logout
+        </Button>
       </div>
     </header>
   )

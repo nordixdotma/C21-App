@@ -10,11 +10,14 @@ import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons"
 
-// This would come from your backend in a real application
-const CLIENT_CREDENTIALS = {
-  username: "client",
-  password: "client123",
-}
+// In a real app, this would come from your backend
+const CLIENT_CREDENTIALS = [
+  { username: "johnsmith", password: "password123", role: "client" },
+  { username: "sarahj", password: "password123", role: "client" },
+  { username: "mohammedf", password: "password123", role: "client" },
+  { username: "fatimaz", password: "password123", role: "client" },
+  { username: "robertc", password: "password123", role: "agent" },
+]
 
 export default function ClientLoginPage() {
   const router = useRouter()
@@ -25,13 +28,16 @@ export default function ClientLoginPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (username === CLIENT_CREDENTIALS.username && password === CLIENT_CREDENTIALS.password) {
+    const user = CLIENT_CREDENTIALS.find((user) => user.username === username && user.password === password)
+
+    if (user) {
       // In a real application, you would:
       // 1. Make an API call to verify credentials
       // 2. Receive and store a JWT token
       // 3. Set up proper session management
       localStorage.setItem("isAuthenticated", "true")
-      localStorage.setItem("userRole", "client")
+      localStorage.setItem("userRole", user.role)
+      localStorage.setItem("username", username)
       router.push("/client-dashboard")
     } else {
       setError("Invalid username or password")
@@ -59,8 +65,8 @@ export default function ClientLoginPage() {
         <div className="lg:p-8">
           <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
             <div className="flex flex-col space-y-2 text-center">
-              <h1 className="text-2xl font-typold font-semibold tracking-tight text-white">Espace Client</h1>
-              <p className="text-sm font-oakes text-muted-foreground">Connectez-vous à votre espace client</p>
+              <h1 className="text-2xl font-typold font-semibold tracking-tight text-white">Client Login</h1>
+              <p className="text-sm font-oakes text-muted-foreground">Sign in to access your client dashboard</p>
             </div>
 
             {error && (
@@ -74,7 +80,7 @@ export default function ClientLoginPage() {
               <div className="space-y-2">
                 <Input
                   type="text"
-                  placeholder="Nom d'utilisateur"
+                  placeholder="Username"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
@@ -84,7 +90,7 @@ export default function ClientLoginPage() {
               <div className="space-y-2">
                 <Input
                   type="password"
-                  placeholder="Mot de passe"
+                  placeholder="Password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
@@ -92,16 +98,16 @@ export default function ClientLoginPage() {
                 />
               </div>
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
-                Se connecter
+                Login
               </Button>
             </form>
             <div className="mt-4 text-center text-sm text-gray-400">
-              <p>Identifiants de démonstration:</p>
-              <p>Nom d'utilisateur: client / Mot de passe: client123</p>
+              <p>Demo client credentials:</p>
+              <p>Username: johnsmith / Password: password123</p>
             </div>
             <div className="text-center text-sm text-gray-400">
               <a href="/login" className="text-primary hover:underline">
-                Accès administrateur
+                Admin access
               </a>
             </div>
           </div>

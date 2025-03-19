@@ -5,8 +5,19 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Slider } from "@/components/ui/slider"
 import { Label } from "@/components/ui/label"
-import { MapPin, Home, Bed, Clock, Search, SlidersHorizontal, X } from "lucide-react"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import {
+  MapPin,
+  Home,
+  Bed,
+  Clock,
+  Search,
+  SlidersHorizontal,
+  X,
+  ArrowUpDown,
+  ArrowDownUp,
+  Calendar,
+} from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 
 export function NewProjectsFilter() {
   const [priceRange, setPriceRange] = useState([500000, 5000000])
@@ -15,6 +26,8 @@ export function NewProjectsFilter() {
   const [selectedBedrooms, setSelectedBedrooms] = useState("")
   const [selectedStatus, setSelectedStatus] = useState("")
   const [isFilterExpanded, setIsFilterExpanded] = useState(false)
+  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [sortOption, setSortOption] = useState("newest")
 
   const formatPrice = (price: number) => {
     return new Intl.NumberFormat("fr-MA", {
@@ -37,7 +50,7 @@ export function NewProjectsFilter() {
   }
 
   return (
-    <div className="mb-8">
+    <div className="mb-6">
       {/* Mobile Filter Toggle */}
       <div className="lg:hidden mb-4">
         <Button
@@ -62,38 +75,68 @@ export function NewProjectsFilter() {
       <div className={`${isFilterExpanded || "hidden lg:block"}`}>
         <div className="bg-white rounded-xl shadow-md overflow-hidden border border-gray-100">
           {/* Header */}
-          <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-4 flex justify-between items-center">
-            <h2 className="text-lg font-semibold flex items-center">
-              <Search className="mr-2 h-5 w-5 text-primary" />
+          <div className="bg-gradient-to-r from-primary/10 to-primary/5 p-3 flex justify-between items-center">
+            <h2 className="text-base font-semibold flex items-center">
+              <Search className="mr-2 h-4 w-4 text-primary" />
               Find Your Perfect New Development
             </h2>
+
             <div className="flex items-center gap-2">
+              {/* Sort dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="h-8 gap-1 text-xs">
+                    <ArrowUpDown className="h-3 w-3" />
+                    Sort:{" "}
+                    {sortOption === "newest"
+                      ? "Newest"
+                      : sortOption === "price-asc"
+                        ? "Price (Low to High)"
+                        : "Price (High to Low)"}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => setSortOption("newest")}>
+                    <Calendar className="mr-2 h-3.5 w-3.5" />
+                    Newest
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortOption("price-asc")}>
+                    <ArrowDownUp className="mr-2 h-3.5 w-3.5" />
+                    Price (Low to High)
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSortOption("price-desc")}>
+                    <ArrowUpDown className="mr-2 h-3.5 w-3.5" />
+                    Price (High to Low)
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={clearFilters}
-                className="text-sm flex items-center text-gray-500 hover:text-primary"
+                className="h-8 text-xs flex items-center text-gray-500 hover:text-primary"
               >
                 <X className="mr-1 h-3 w-3" />
                 Clear
               </Button>
-              <Button size="sm" className="lg:hidden" variant="outline" onClick={toggleFilter}>
+
+              <Button size="sm" className="lg:hidden h-8" variant="outline" onClick={toggleFilter}>
                 Close
               </Button>
             </div>
           </div>
 
-          {/* Filter Content */}
-          <div className="p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="location" className="flex items-center text-sm font-medium">
-                  <MapPin className="mr-1.5 h-3.5 w-3.5 text-primary" />
-                  Location
-                </Label>
+          {/* Compact Filter Row */}
+          <div className="p-3 border-b border-gray-100">
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div>
                 <Select value={selectedLocation} onValueChange={setSelectedLocation}>
-                  <SelectTrigger id="location" className="border-gray-200 focus:ring-primary">
-                    <SelectValue placeholder="Select location" />
+                  <SelectTrigger className="border-gray-200 focus:ring-primary h-9 text-sm">
+                    <div className="flex items-center">
+                      <MapPin className="mr-1.5 h-3.5 w-3.5 text-primary flex-shrink-0" />
+                      <SelectValue placeholder="Location" />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="hivernage">Hivernage</SelectItem>
@@ -105,14 +148,13 @@ export function NewProjectsFilter() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="type" className="flex items-center text-sm font-medium">
-                  <Home className="mr-1.5 h-3.5 w-3.5 text-primary" />
-                  Property Type
-                </Label>
+              <div>
                 <Select value={selectedType} onValueChange={setSelectedType}>
-                  <SelectTrigger id="type" className="border-gray-200 focus:ring-primary">
-                    <SelectValue placeholder="Select type" />
+                  <SelectTrigger className="border-gray-200 focus:ring-primary h-9 text-sm">
+                    <div className="flex items-center">
+                      <Home className="mr-1.5 h-3.5 w-3.5 text-primary flex-shrink-0" />
+                      <SelectValue placeholder="Property Type" />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="apartment">Apartment</SelectItem>
@@ -124,33 +166,13 @@ export function NewProjectsFilter() {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="bedrooms" className="flex items-center text-sm font-medium">
-                  <Bed className="mr-1.5 h-3.5 w-3.5 text-primary" />
-                  Bedrooms
-                </Label>
-                <Select value={selectedBedrooms} onValueChange={setSelectedBedrooms}>
-                  <SelectTrigger id="bedrooms" className="border-gray-200 focus:ring-primary">
-                    <SelectValue placeholder="Select bedrooms" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
-                    <SelectItem value="3">3</SelectItem>
-                    <SelectItem value="4">4</SelectItem>
-                    <SelectItem value="5+">5+</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="status" className="flex items-center text-sm font-medium">
-                  <Clock className="mr-1.5 h-3.5 w-3.5 text-primary" />
-                  Status
-                </Label>
+              <div>
                 <Select value={selectedStatus} onValueChange={setSelectedStatus}>
-                  <SelectTrigger id="status" className="border-gray-200 focus:ring-primary">
-                    <SelectValue placeholder="Select status" />
+                  <SelectTrigger className="border-gray-200 focus:ring-primary h-9 text-sm">
+                    <div className="flex items-center">
+                      <Clock className="mr-1.5 h-3.5 w-3.5 text-primary flex-shrink-0" />
+                      <SelectValue placeholder="Status" />
+                    </div>
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="offplan">Off-Plan</SelectItem>
@@ -160,53 +182,73 @@ export function NewProjectsFilter() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
 
-            {/* Advanced Filters Accordion */}
-            <Accordion type="single" collapsible className="mt-4">
-              <AccordionItem value="advanced-filters" className="border-b-0">
-                <AccordionTrigger className="py-2 text-sm font-medium text-primary hover:no-underline">
-                  Advanced Filters
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="pt-2 pb-4">
-                    <div>
-                      <div className="flex justify-between mb-2">
-                        <Label className="flex items-center text-sm font-medium">Price Range</Label>
-                        <span className="text-sm text-primary font-medium">
-                          {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
-                        </span>
-                      </div>
-                      <Slider
-                        value={priceRange}
-                        onValueChange={setPriceRange}
-                        min={500000}
-                        max={10000000}
-                        step={100000}
-                        className="py-4"
-                      />
-                      <div className="flex justify-between text-xs text-gray-500 mt-1">
-                        <span>{formatPrice(500000)}</span>
-                        <span>{formatPrice(10000000)}</span>
-                      </div>
-                    </div>
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-
-            {/* Search Button */}
-            <div className="mt-4">
-              <Button className="w-full bg-primary hover:bg-primary/90 text-white">
-                <Search className="mr-2 h-4 w-4" />
-                Search Projects
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  className="text-xs h-9 flex-grow"
+                  onClick={() => setShowAdvanced(!showAdvanced)}
+                >
+                  <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
+                  {showAdvanced ? "Hide" : "More"} Filters
+                </Button>
+                <Button className="h-9 bg-primary hover:bg-primary/90 text-white px-4">
+                  <Search className="h-3.5 w-3.5" />
+                </Button>
+              </div>
             </div>
           </div>
 
+          {/* Advanced Filters */}
+          {showAdvanced && (
+            <div className="p-3 bg-gray-50">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="bedrooms" className="flex items-center text-sm font-medium">
+                    <Bed className="mr-1.5 h-3.5 w-3.5 text-primary" />
+                    Bedrooms
+                  </Label>
+                  <Select value={selectedBedrooms} onValueChange={setSelectedBedrooms}>
+                    <SelectTrigger id="bedrooms" className="border-gray-200 focus:ring-primary">
+                      <SelectValue placeholder="Select bedrooms" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="1">1</SelectItem>
+                      <SelectItem value="2">2</SelectItem>
+                      <SelectItem value="3">3</SelectItem>
+                      <SelectItem value="4">4</SelectItem>
+                      <SelectItem value="5+">5+</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2 md:col-span-3">
+                  <div className="flex justify-between mb-1">
+                    <Label className="flex items-center text-sm font-medium">Price Range</Label>
+                    <span className="text-sm text-primary font-medium">
+                      {formatPrice(priceRange[0])} - {formatPrice(priceRange[1])}
+                    </span>
+                  </div>
+                  <Slider
+                    value={priceRange}
+                    onValueChange={setPriceRange}
+                    min={500000}
+                    max={10000000}
+                    step={100000}
+                    className="py-4"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>{formatPrice(500000)}</span>
+                    <span>{formatPrice(10000000)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Active Filters */}
           {(selectedLocation || selectedType || selectedBedrooms || selectedStatus) && (
-            <div className="px-4 py-3 bg-gray-50 border-t border-gray-100 flex flex-wrap gap-2">
+            <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 flex flex-wrap gap-2">
               <span className="text-xs text-gray-500 mr-1 pt-1">Active filters:</span>
 
               {selectedLocation && (
