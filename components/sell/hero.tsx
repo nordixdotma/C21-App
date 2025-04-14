@@ -23,7 +23,7 @@ const gradientAnimation = `
 
 export function SellHero() {
   return (
-    <section className="relative h-[80vh] min-h-[400px] flex items-center justify-center">
+    <section className="relative h-[50vh] min-h-[400px] flex items-center justify-center">
       <style jsx>{gradientAnimation}</style>
       <div className="absolute inset-0">
         <Image src="/herobackground.jpg" alt="Sell Your Property" fill priority className="object-cover" quality={90} />

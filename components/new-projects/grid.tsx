@@ -258,6 +258,24 @@ export function NewProjectsGrid() {
                 <Badge className="absolute top-3 left-3 bg-primary text-white border-none">{project.status}</Badge>
 
                 <div className="absolute top-3 right-3 flex gap-2">
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={(e) => {
+                            e.preventDefault()
+                            // Share functionality would go here
+                          }}
+                          className="rounded-full bg-white/80 p-2 text-gray-700 backdrop-blur-sm transition-all hover:bg-white hover:text-primary"
+                        >
+                          <Share2 className="h-4 w-4" />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Share project</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
 
                   <TooltipProvider>
                     <Tooltip>

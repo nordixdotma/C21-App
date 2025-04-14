@@ -1,89 +1,104 @@
+"use client"
+
 import Image from "next/image"
 import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
-import { Bed, Bath, Square, MapPin, Building2 } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Heart, MapPin, Bed, Bath, Maximize, ArrowRight } from "lucide-react"
 import type { Project } from "@/types"
 
 interface ProjectCardProps {
   project: Project
   onHover?: (id: number | null) => void
+  layout?: "vertical" | "horizontal"
 }
 
-export function ProjectCard({ project, onHover }: ProjectCardProps) {
+export function ProjectCard({ project, onHover, layout = "vertical" }: ProjectCardProps) {
+  const isHorizontal = layout === "horizontal"
+
   return (
-    <Link
-      href={`/project/${project.id}`}
+    <div
+      className={`group overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-all duration-200 hover:shadow-md ${
+        isHorizontal ? "flex flex-col md:flex-row" : ""
+      }`}
       onMouseEnter={() => onHover?.(project.id)}
       onMouseLeave={() => onHover?.(null)}
-      className="block"
     >
-      <div className="group bg-black rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
-        <div className="relative">
-          <div className="aspect-[4/3] overflow-hidden">
-            <Image
-              src={project.image || "/placeholder.svg"}
-              alt={project.name}
-              width={600}
-              height={450}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-            />
-          </div>
+      {/* Image container */}
+      <div className={`relative overflow-hidden ${isHorizontal ? "md:w-2/5" : "aspect-[4/3]"}`}>
+        <Link href={`/project/${project.id}`}>
+          <Image
+            src={project.image || "/placeholder.svg"}
+            alt={project.name}
+            width={600}
+            height={400}
+            className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        </Link>
 
-          {/* Status badge */}
-          {project.status && (
-            <Badge className="absolute top-3 left-3 bg-primary hover:bg-primary text-white border-none">
-              {project.status}
-            </Badge>
-          )}
-
-          {/* Payment plan badge */}
-          {project.paymentPlan && (
-            <Badge variant="outline" className="absolute top-3 right-3 bg-black/80 text-white border-none">
-              {project.paymentPlan}
-            </Badge>
-          )}
-
-          {/* Price badge */}
-          <div className="absolute -bottom-4 right-4">
-            <Badge className="bg-primary hover:bg-primary text-white text-sm py-2 px-4 shadow-lg">
-              {project.price}
-            </Badge>
-          </div>
+        {/* Badges */}
+        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
+          {project.isNew && <Badge className="bg-green-500 hover:bg-green-600">New</Badge>}
+          {project.isFeatured && <Badge className="bg-primary hover:bg-primary/90">Featured</Badge>}
+          {project.type === "sale" && <Badge className="bg-blue-500 hover:bg-blue-600">For Sale</Badge>}
+          {project.type === "rent" && <Badge className="bg-amber-500 hover:bg-amber-600">For Rent</Badge>}
         </div>
 
-        <div className="p-5">
-          <h3 className="font-bold text-lg mb-2 text-white group-hover:text-primary transition-colors line-clamp-1 mt-2">
-            {project.name}
-          </h3>
+        {/* Favorite button */}
+        <button className="absolute right-3 top-3 rounded-full bg-white/80 p-2 text-gray-700 backdrop-blur-sm transition-all hover:bg-white hover:text-rose-500">
+          <Heart className="h-4 w-4" />
+        </button>
 
-          <div className="flex items-center text-gray-200 mb-3">
-            <MapPin className="h-4 w-4 mr-1 flex-shrink-0" />
-            <span className="text-sm line-clamp-1">{project.location}</span>
-          </div>
-
-          <div className="flex items-center text-gray-200 mb-4">
-            <Building2 className="h-4 w-4 mr-1 flex-shrink-0" />
-            <span className="text-sm line-clamp-1">{project.developer}</span>
-          </div>
-
-          {/* Property features */}
-          <div className="flex items-center justify-between border-t border-gray-100 pt-4">
-            <div className="flex items-center text-gray-200">
-              <Bed className="h-4 w-4 mr-1" />
-              <span className="text-xs">3-4</span>
-            </div>
-            <div className="flex items-center text-gray-200">
-              <Bath className="h-4 w-4 mr-1" />
-              <span className="text-xs">2-3</span>
-            </div>
-            <div className="flex items-center text-gray-200">
-              <Square className="h-4 w-4 mr-1" />
-              <span className="text-xs">120-250m²</span>
-            </div>
-          </div>
+        {/* Price tag */}
+        <div className="absolute bottom-3 left-3 rounded-lg bg-black/70 px-3 py-1.5 text-sm font-semibold text-white backdrop-blur-sm">
+          {project.price}
         </div>
       </div>
-    </Link>
+
+      {/* Content */}
+      <div className={`flex flex-col p-4 ${isHorizontal ? "md:w-3/5" : ""}`}>
+        <div className="mb-2 flex items-center text-sm text-gray-500">
+          <MapPin className="mr-1 h-4 w-4 text-gray-400" />
+          {project.location}
+        </div>
+
+        <h3 className="mb-2 text-lg font-semibold leading-tight">
+          <Link href={`/project/${project.id}`} className="hover:text-primary">
+            {project.name}
+          </Link>
+        </h3>
+
+        <p className="mb-4 text-sm text-gray-600 line-clamp-2">{project.description}</p>
+
+        {/* Property details */}
+        <div className="mt-auto flex flex-wrap gap-3 border-t border-gray-100 pt-3">
+          <div className="flex items-center text-sm text-gray-500">
+            <Bed className="mr-1 h-4 w-4 text-gray-400" />
+            {project.bedrooms} {project.bedrooms === 1 ? "Bedroom" : "Bedrooms"}
+          </div>
+          <div className="flex items-center text-sm text-gray-500">
+            <Bath className="mr-1 h-4 w-4 text-gray-400" />
+            {project.bathrooms} {project.bathrooms === 1 ? "Bathroom" : "Bathrooms"}
+          </div>
+          <div className="flex items-center text-sm text-gray-500">
+            <Maximize className="mr-1 h-4 w-4 text-gray-400" />
+            {project.size} m²
+          </div>
+        </div>
+
+        {/* View details button - only shown on horizontal layout */}
+        {isHorizontal && (
+          <div className="mt-4 flex justify-end">
+            <Button asChild variant="outline" size="sm" className="gap-1">
+              <Link href={`/project/${project.id}`}>
+                View Details
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </Button>
+          </div>
+        )}
+      </div>
+    </div>
   )
 }
 

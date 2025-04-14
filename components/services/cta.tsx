@@ -4,7 +4,7 @@ import Link from "next/link"
 
 export function ServicesCTA() {
   return (
-    <section className="py-16 bg-gray-50">
+    <section className="py-16 bg-black">
       <div className="max-w-[1170px] mx-auto px-4">
         <div className="bg-gradient-to-r from-primary/90 to-primary rounded-xl p-8 md:p-12">
           <div className="max-w-3xl mx-auto text-center">
@@ -19,7 +19,7 @@ export function ServicesCTA() {
                   Contact Us Now <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button variant="outline" className="bg-white text-primary hover:bg-white/90" asChild>
+              <Button variant="outline" className="border-white text-white hover:bg-white/10" asChild>
                 <Link href="/our-team">Meet Our Team</Link>
               </Button>
             </div>

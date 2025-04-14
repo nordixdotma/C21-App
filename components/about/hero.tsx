@@ -2,7 +2,7 @@ import Image from "next/image"
 
 export function AboutHero() {
   return (
-    <section className="relative h-[80vh] min-h-[400px] flex items-center justify-center">
+    <section className="relative h-[50vh] min-h-[400px] flex items-center justify-center">
       <div className="absolute inset-0">
         <Image src="/herobackground.jpg" alt="About Us" fill priority className="object-cover" quality={90} />
         <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-black/80" />

@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 
 export function NewProjectsHero() {
   return (
-    <section className="relative h-[80vh] min-h-[400px] flex items-center justify-center">
+    <section className="relative h-[50vh] min-h-[400px] flex items-center justify-center">
       <div className="absolute inset-0">
         <Image
           src="/herobackground.jpg"
@@ -27,6 +27,18 @@ export function NewProjectsHero() {
           Discover the latest and most exclusive new development projects in Marrakech
         </p>
 
+        {/* Search bar */}
+        <div className="flex flex-col sm:flex-row gap-2 max-w-2xl mx-auto">
+          <div className="relative flex-grow">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+            <Input
+              type="text"
+              placeholder="Search by project name or location"
+              className="pl-10 h-12 bg-white/95 backdrop-blur-sm border-0 shadow-lg focus-visible:ring-primary"
+            />
+          </div>
+          <Button className="h-12 px-8 bg-primary hover:bg-primary/90 text-white shadow-lg">Search</Button>
+        </div>
       </div>
     </section>
   )
