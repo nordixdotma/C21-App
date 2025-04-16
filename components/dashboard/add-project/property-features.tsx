@@ -69,4 +69,3 @@ export function PropertyFeatures({ data, updateData, onNext, onBack }: PropertyF
     </form>
   )
 }
-

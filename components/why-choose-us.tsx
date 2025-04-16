@@ -65,4 +65,3 @@ export function WhyChooseUs() {
     </section>
   )
 }
-

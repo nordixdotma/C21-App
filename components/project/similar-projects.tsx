@@ -36,4 +36,3 @@ export function SimilarProjects({ currentProjectId, className }: SimilarProjects
     </div>
   )
 }
-

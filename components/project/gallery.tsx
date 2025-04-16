@@ -20,12 +20,15 @@ export function ProjectGallery({ images, className }: ProjectGalleryProps) {
   const [touchStart, setTouchStart] = useState(0)
   const [touchEnd, setTouchEnd] = useState(0)
   const thumbnailsRef = useRef<HTMLDivElement>(null)
+  const [mainImageLoaded, setMainImageLoaded] = useState(false)
 
   const handlePrevious = () => {
+    setMainImageLoaded(false)
     setActiveImage((prev) => (prev === 0 ? images.length - 1 : prev - 1))
   }
 
   const handleNext = () => {
+    setMainImageLoaded(false)
     setActiveImage((prev) => (prev === images.length - 1 ? 0 : prev + 1))
   }
 
@@ -67,7 +70,7 @@ export function ProjectGallery({ images, className }: ProjectGalleryProps) {
     <div className={cn("space-y-4", className)}>
       <div className="relative">
         <div
-          className="relative aspect-[16/9] overflow-hidden rounded-lg"
+          className="relative aspect-[16/9] overflow-hidden rounded-lg bg-gray-100"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
@@ -76,8 +79,9 @@ export function ProjectGallery({ images, className }: ProjectGalleryProps) {
             src={images[activeImage] || "/placeholder.svg"}
             alt="Project image"
             fill
-            className="object-cover transition-all duration-300"
-            priority
+            className={cn("object-cover transition-all duration-300", mainImageLoaded ? "opacity-100" : "opacity-0")}
+            onLoadingComplete={() => setMainImageLoaded(true)}
+            sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
           />
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-300">
@@ -100,6 +104,7 @@ export function ProjectGallery({ images, className }: ProjectGalleryProps) {
                       alt="Project image fullscreen"
                       fill
                       className="object-contain"
+                      sizes="90vw"
                     />
                     <Button
                       variant="outline"
@@ -149,7 +154,10 @@ export function ProjectGallery({ images, className }: ProjectGalleryProps) {
           <button
             key={index}
             data-index={index}
-            onClick={() => setActiveImage(index)}
+            onClick={() => {
+              setMainImageLoaded(false)
+              setActiveImage(index)
+            }}
             className={cn(
               "relative flex-shrink-0 w-20 h-20 sm:w-24 sm:h-24 overflow-hidden rounded-md transition-all snap-start",
               "hover:ring-2 hover:ring-primary focus:outline-none focus:ring-2 focus:ring-primary",
@@ -161,6 +169,8 @@ export function ProjectGallery({ images, className }: ProjectGalleryProps) {
               alt={`Project image ${index + 1}`}
               fill
               className={cn("object-cover transition-all duration-300", activeImage !== index && "hover:opacity-75")}
+              sizes="96px" // Thumbnail size
+              loading="lazy"
             />
           </button>
         ))}
@@ -168,4 +178,3 @@ export function ProjectGallery({ images, className }: ProjectGalleryProps) {
     </div>
   )
 }
-

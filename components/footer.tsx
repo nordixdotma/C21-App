@@ -156,4 +156,3 @@ function SocialLink({ href, icon }: { href: string; icon: React.ReactNode }) {
     </a>
   )
 }
-

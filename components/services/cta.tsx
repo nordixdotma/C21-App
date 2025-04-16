@@ -19,7 +19,7 @@ export function ServicesCTA() {
                   Contact Us Now <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
-              <Button variant="outline" className="border-white text-white hover:bg-white/10" asChild>
+              <Button variant="outline" className="border-white text-primary hover:bg-white/10" asChild>
                 <Link href="/our-team">Meet Our Team</Link>
               </Button>
             </div>
@@ -29,4 +29,3 @@ export function ServicesCTA() {
     </section>
   )
 }
-

@@ -21,4 +21,3 @@ export function ProjectVideo({ videoUrl, className }: ProjectVideoProps) {
     </div>
   )
 }
-

@@ -25,4 +25,3 @@ export function ProjectFeatures({ features, className }: ProjectFeaturesProps) {
     </div>
   )
 }
-

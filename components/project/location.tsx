@@ -30,4 +30,3 @@ export function ProjectLocation({ address, coordinates, className }: ProjectLoca
     </div>
   )
 }
-

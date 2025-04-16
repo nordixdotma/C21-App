@@ -10,18 +10,18 @@ import { useRouter } from "next/navigation"
 import { cn } from "@/lib/utils"
 
 const buyMenuItems = [
-  { href: "/buy/houses", label: "Houses & Villas" },
-  { href: "/buy/apartments", label: "Apartments & Penthouses" },
-  { href: "/buy/commercial", label: "Commercial Properties" },
-  { href: "/buy/land", label: "Land & Plots" },
-  { href: "/buy/off-plan", label: "Off-Plan Projects" },
+  { href: "/search?category=buy&type=house", label: "Houses & Villas" },
+  { href: "/search?category=buy&type=apartment", label: "Apartments & Penthouses" },
+  { href: "/search?category=buy&type=commercial", label: "Commercial Properties" },
+  { href: "/search?category=buy&type=land", label: "Land & Plots" },
+  { href: "/search?category=buy&type=off-plan", label: "Off-Plan Projects" },
 ]
 
 const rentMenuItems = [
-  { href: "/rent/short-term", label: "Short-Term Rentals" },
-  { href: "/rent/long-term", label: "Long-Term Rentals" },
-  { href: "/rent/vacation", label: "Vacation Homes" },
-  { href: "/rent/commercial", label: "Commercial Spaces" },
+  { href: "/search?category=rent&type=short-term", label: "Short-Term Rentals" },
+  { href: "/search?category=rent&type=long-term", label: "Long-Term Rentals" },
+  { href: "/search?category=rent&type=vacation", label: "Vacation Homes" },
+  { href: "/search?category=rent&type=commercial", label: "Commercial Spaces" },
 ]
 
 const moreMenuItems = [
@@ -301,7 +301,7 @@ export function Navbar() {
             </div>
 
             {/* Action Buttons */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="w-full">
               <Button
                 className="w-full"
                 variant="default"
@@ -312,16 +312,6 @@ export function Navbar() {
               >
                 Espace client
               </Button>
-              <Button
-                className="w-full"
-                variant="outline"
-                onClick={() => {
-                  closeMobileMenu()
-                  router.push("/login")
-                }}
-              >
-                Admin
-              </Button>
             </div>
           </div>
         </div>
@@ -329,4 +319,3 @@ export function Navbar() {
     </header>
   )
 }
-

@@ -1,10 +1,9 @@
 "use client"
 
-import { useState } from "react"
-import { useRouter } from "next/navigation"
+import type React from "react"
+
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Search, Plus, Trash2, Edit, Mail, Phone, Eye } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -14,448 +13,807 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Badge } from "@/components/ui/badge"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Edit, Trash2, UserPlus, Upload, Eye, EyeOff, Copy, Check, Loader2 } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
-// Mock data for users
-const initialUsers = [
-  {
-    id: 1,
-    name: "John Smith",
-    email: "john.smith@example.com",
-    phone: "+212 612 345 678",
-    username: "johnsmith",
-    password: "password123",
-    role: "client",
-    status: "active",
-    properties: 3,
-  },
-  {
-    id: 2,
-    name: "Sarah Johnson",
-    email: "sarah.johnson@example.com",
-    phone: "+212 623 456 789",
-    username: "sarahj",
-    password: "password123",
-    role: "client",
-    status: "active",
-    properties: 1,
-  },
-  {
-    id: 3,
-    name: "Mohammed Al Fasi",
-    email: "mohammed.alfasi@example.com",
-    phone: "+212 634 567 890",
-    username: "mohammedf",
-    password: "password123",
-    role: "client",
-    status: "inactive",
-    properties: 2,
-  },
-  {
-    id: 4,
-    name: "Fatima Zahra",
-    email: "fatima.zahra@example.com",
-    phone: "+212 645 678 901",
-    username: "fatimaz",
-    password: "password123",
-    role: "client",
-    status: "active",
-    properties: 0,
-  },
-  {
-    id: 5,
-    name: "Robert Chen",
-    email: "robert.chen@example.com",
-    phone: "+212 656 789 012",
-    username: "robertc",
-    password: "password123",
-    role: "agent",
-    status: "active",
-    properties: 12,
-  },
-]
+interface User {
+  id: number
+  name: string
+  username: string
+  email: string
+  password?: string
+  role: string
+  image?: string
+  phone?: string
+  createdAt?: string
+}
 
 export function UsersList() {
-  const [users, setUsers] = useState(initialUsers)
-  const [search, setSearch] = useState("")
-  const [isAddUserOpen, setIsAddUserOpen] = useState(false)
-  const [isEditUserOpen, setIsEditUserOpen] = useState(false)
-  const [currentUser, setCurrentUser] = useState<any>(null)
-  const [newUser, setNewUser] = useState({
+  const [users, setUsers] = useState<User[]>([])
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [newUser, setNewUser] = useState<User>({
+    id: 0,
     name: "",
-    email: "",
-    phone: "",
     username: "",
+    email: "",
     password: "",
     role: "client",
-    status: "active",
+    image: "",
+    phone: "",
   })
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [profileImage, setProfileImage] = useState<File | null>(null)
+  const [profileImagePreview, setProfileImagePreview] = useState<string>("")
+  const [visiblePasswordIds, setVisiblePasswordIds] = useState<number[]>([])
+  const [copiedId, setCopiedId] = useState<number | null>(null)
+  const [searchQuery, setSearchQuery] = useState("")
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
-  const router = useRouter()
+  // Load users from API on component mount
+  useEffect(() => {
+    fetchUsers()
+  }, [])
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.name.toLowerCase().includes(search.toLowerCase()) || user.email.toLowerCase().includes(search.toLowerCase()),
-  )
+  const fetchUsers = async () => {
+    try {
+      setIsLoading(true)
+      setError(null)
 
-  const handleAddUser = () => {
-    const id = Math.max(...users.map((user) => user.id)) + 1
-    setUsers([...users, { ...newUser, id, properties: 0 }])
-    setNewUser({
-      name: "",
-      email: "",
-      phone: "",
-      username: "",
-      password: "",
-      role: "client",
-      status: "active",
-    })
-    setIsAddUserOpen(false)
-  }
+      const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("Authentication token not found")
+      }
 
-  const handleEditUser = () => {
-    setUsers(users.map((user) => (user.id === currentUser.id ? currentUser : user)))
-    setIsEditUserOpen(false)
-  }
+      const response = await fetch("/api/users", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
 
-  const handleDeleteUser = (id: number) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
-      setUsers(users.filter((user) => user.id !== id))
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to fetch users")
+      }
+
+      const data = await response.json()
+      setUsers(data)
+    } catch (err) {
+      console.error("Error fetching users:", err)
+      setError(err instanceof Error ? err.message : "An error occurred")
+    } finally {
+      setIsLoading(false)
     }
   }
 
-  const viewUserDetails = (id: number) => {
-    router.push(`/dashboard/users/${id}`)
+  const handleAddUser = async () => {
+    if (!newUser.name || !newUser.username || !newUser.email || !newUser.password) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("Authentication token not found")
+      }
+
+      const response = await fetch("/api/users", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newUser),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to add user")
+      }
+
+      const addedUser = await response.json()
+
+      setUsers((prevUsers) => [...prevUsers, addedUser])
+      setNewUser({
+        id: 0,
+        name: "",
+        username: "",
+        email: "",
+        password: "",
+        role: "client",
+        image: "",
+        phone: "",
+      })
+      setProfileImage(null)
+      setProfileImagePreview("")
+      setIsAddDialogOpen(false)
+
+      toast({
+        title: "User added",
+        description: `${addedUser.name} has been added successfully.`,
+      })
+    } catch (err) {
+      console.error("Error adding user:", err)
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "An error occurred while adding user",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleEditUser = async () => {
+    if (!selectedUser || !selectedUser.name || !selectedUser.username || !selectedUser.email) {
+      toast({
+        title: "Missing information",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("Authentication token not found")
+      }
+
+      const response = await fetch(`/api/users/${selectedUser.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(selectedUser),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to update user")
+      }
+
+      const updatedUser = await response.json()
+
+      setUsers((prevUsers) => prevUsers.map((user) => (user.id === selectedUser.id ? { ...updatedUser } : user)))
+      setSelectedUser(null)
+      setProfileImage(null)
+      setProfileImagePreview("")
+      setIsEditDialogOpen(false)
+
+      toast({
+        title: "User updated",
+        description: `${updatedUser.name} has been updated successfully.`,
+      })
+    } catch (err) {
+      console.error("Error updating user:", err)
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "An error occurred while updating user",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return
+
+    try {
+      const token = localStorage.getItem("token")
+      if (!token) {
+        throw new Error("Authentication token not found")
+      }
+
+      const response = await fetch(`/api/users/${selectedUser.id}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to delete user")
+      }
+
+      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== selectedUser.id))
+      setSelectedUser(null)
+      setIsDeleteDialogOpen(false)
+
+      toast({
+        title: "User deleted",
+        description: `${selectedUser.name} has been deleted successfully.`,
+      })
+    } catch (err) {
+      console.error("Error deleting user:", err)
+      toast({
+        title: "Error",
+        description: err instanceof Error ? err.message : "An error occurred while deleting user",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0]
+      setProfileImage(file)
+
+      // Convert to data URL for preview and storage
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          setProfileImagePreview(event.target.result as string)
+        }
+      }
+      reader.readAsDataURL(file)
+    }
+  }
+
+  const togglePasswordVisibility = (userId: number) => {
+    if (visiblePasswordIds.includes(userId)) {
+      setVisiblePasswordIds(visiblePasswordIds.filter((id) => id !== userId))
+    } else {
+      setVisiblePasswordIds([...visiblePasswordIds, userId])
+    }
+  }
+
+  const copyToClipboard = (text: string, userId: number) => {
+    navigator.clipboard.writeText(text).then(
+      () => {
+        setCopiedId(userId)
+        toast({
+          title: "Password copied",
+          description: "Password has been copied to clipboard.",
+        })
+
+        // Reset the copied state after 2 seconds
+        setTimeout(() => {
+          setCopiedId(null)
+        }, 2000)
+      },
+      (err) => {
+        console.error("Could not copy text: ", err)
+        toast({
+          title: "Copy failed",
+          description: "Failed to copy password to clipboard.",
+          variant: "destructive",
+        })
+      },
+    )
+  }
+
+  const filteredUsers = users.filter(
+    (user) =>
+      user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      user.username.toLowerCase().includes(searchQuery.toLowerCase()),
+  )
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="mt-4 text-gray-500">Loading users...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <Alert variant="destructive" className="mb-6">
+        <AlertDescription>
+          Error loading users: {error}
+          <div className="mt-2">
+            <Button onClick={fetchUsers} variant="outline" size="sm">
+              Try Again
+            </Button>
+          </div>
+        </AlertDescription>
+      </Alert>
+    )
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="font-typold text-2xl font-semibold">User Management</h2>
-        <div className="flex items-center gap-4">
-          <div className="relative w-64">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-            <Input
-              type="search"
-              placeholder="Search users..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <Dialog open={isAddUserOpen} onOpenChange={setIsAddUserOpen}>
+    <div className="space-y-4">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h2 className="text-2xl font-semibold">User Management</h2>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+          <Input
+            placeholder="Search users..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full sm:max-w-sm"
+          />
+          <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="bg-primary hover:bg-primary/90">
-                <Plus className="mr-2 h-4 w-4" />
+              <Button className="w-full sm:w-auto">
+                <UserPlus className="h-4 w-4 mr-2" />
                 Add User
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle>Add New User</DialogTitle>
-                <DialogDescription>
-                  Create a new user account. The user will receive an email with login instructions.
-                </DialogDescription>
+                <DialogDescription>Add a new user to the system.</DialogDescription>
               </DialogHeader>
-              <div className="grid gap-4 py-4">
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="name" className="text-right">
-                    Name
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="profile-image">Profile Image</Label>
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-gray-200">
+                      {profileImagePreview ? (
+                        <img
+                          src={profileImagePreview || "/placeholder.svg"}
+                          alt="Profile preview"
+                          className="h-full w-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-400">
+                          <span className="text-3xl">?</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Label
+                        htmlFor="profile-upload"
+                        className="flex cursor-pointer items-center gap-2 rounded-md border border-gray-300 px-3 py-2 hover:bg-gray-50"
+                      >
+                        <Upload className="h-4 w-4" />
+                        Upload Image
+                      </Label>
+                      <Input
+                        id="profile-upload"
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleImageChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">
+                    Full Name <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="name"
                     value={newUser.name}
                     onChange={(e) => setNewUser({ ...newUser, name: e.target.value })}
-                    className="col-span-3"
+                    required
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="email" className="text-right">
-                    Email
+                <div className="space-y-2">
+                  <Label htmlFor="username">
+                    Username <span className="text-red-500">*</span>
+                  </Label>
+                  <Input
+                    id="username"
+                    value={newUser.username}
+                    onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
+                    required
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="email">
+                    Email <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="email"
                     type="email"
                     value={newUser.email}
                     onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                    className="col-span-3"
+                    required
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="phone" className="text-right">
-                    Phone
-                  </Label>
-                  <Input
-                    id="phone"
-                    value={newUser.phone}
-                    onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="username" className="text-right">
-                    Username
-                  </Label>
-                  <Input
-                    id="username"
-                    value={newUser.username}
-                    onChange={(e) => setNewUser({ ...newUser, username: e.target.value })}
-                    className="col-span-3"
-                  />
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="password" className="text-right">
-                    Password
+                <div className="space-y-2">
+                  <Label htmlFor="password">
+                    Password <span className="text-red-500">*</span>
                   </Label>
                   <Input
                     id="password"
-                    type="password"
+                    type="text"
                     value={newUser.password}
                     onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                    className="col-span-3"
+                    required
                   />
                 </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="role" className="text-right">
-                    Role
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone</Label>
+                  <Input
+                    id="phone"
+                    value={newUser.phone || ""}
+                    onChange={(e) => setNewUser({ ...newUser, phone: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="role">
+                    Role <span className="text-red-500">*</span>
                   </Label>
                   <Select value={newUser.role} onValueChange={(value) => setNewUser({ ...newUser, role: value })}>
-                    <SelectTrigger className="col-span-3">
+                    <SelectTrigger>
                       <SelectValue placeholder="Select role" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="client">Client</SelectItem>
                       <SelectItem value="agent">Agent</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                  <Label htmlFor="status" className="text-right">
-                    Status
-                  </Label>
-                  <Select value={newUser.status} onValueChange={(value) => setNewUser({ ...newUser, status: value })}>
-                    <SelectTrigger className="col-span-3">
-                      <SelectValue placeholder="Select status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="client">Client</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsAddUserOpen(false)}>
+                <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleAddUser}>Create User</Button>
+                <Button onClick={handleAddUser}>Add User</Button>
               </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
       </div>
 
-      <div className="rounded-xl border bg-white shadow-sm">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b bg-gray-50/50">
-                <th className="px-4 py-3 text-left font-typold text-sm">Name</th>
-                <th className="px-4 py-3 text-left font-typold text-sm">Email</th>
-                <th className="px-4 py-3 text-left font-typold text-sm">Phone</th>
-                <th className="px-4 py-3 text-left font-typold text-sm">Username</th>
-                <th className="px-4 py-3 text-left font-typold text-sm">Role</th>
-                <th className="px-4 py-3 text-left font-typold text-sm">Status</th>
-                <th className="px-4 py-3 text-left font-typold text-sm">Properties</th>
-                <th className="px-4 py-3 text-left font-typold text-sm">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="font-oakes">
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="border-b">
-                  <td className="px-4 py-3 font-medium">{user.name}</td>
-                  <td className="px-4 py-3 text-gray-600">
-                    <div className="flex items-center">
-                      <Mail className="mr-2 h-4 w-4 text-gray-400" />
-                      {user.email}
+      {users.length === 0 ? (
+        <Alert>
+          <AlertDescription>No users found. Click the "Add User" button to create your first user.</AlertDescription>
+        </Alert>
+      ) : (
+        <>
+          {/* Mobile card view */}
+          <div className="md:hidden space-y-4">
+            {filteredUsers.map((user) => (
+              <div key={user.id} className="rounded-lg border bg-white p-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="h-10 w-10 overflow-hidden rounded-full">
+                      <img
+                        src={user.image || `/placeholder.svg?height=40&width=40`}
+                        alt={user.name}
+                        className="h-full w-full object-cover"
+                      />
                     </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">
-                    <div className="flex items-center">
-                      <Phone className="mr-2 h-4 w-4 text-gray-400" />
-                      {user.phone}
+                    <div>
+                      <h3 className="font-medium">{user.name}</h3>
+                      <p className="text-sm text-gray-500">{user.username}</p>
                     </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600">{user.username}</td>
-                  <td className="px-4 py-3">
-                    <Badge
-                      variant={user.role === "admin" ? "default" : user.role === "agent" ? "secondary" : "outline"}
-                    >
-                      {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge
-                      variant={user.status === "active" ? "default" : "destructive"}
-                      className={user.status === "active" ? "bg-green-500" : ""}
-                    >
-                      {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3 text-center">{user.properties}</td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => viewUserDetails(user.id)}
-                        className="text-blue-500 hover:text-blue-600"
-                      >
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => {
-                          setCurrentUser(user)
-                          setIsEditUserOpen(true)
-                        }}
-                        className="text-blue-500 hover:text-blue-600"
-                      >
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="text-red-500 hover:text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                  </div>
+                  <span
+                    className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                      user.role === "agent"
+                        ? "bg-blue-100 text-blue-800"
+                        : user.role === "admin"
+                          ? "bg-purple-100 text-purple-800"
+                          : "bg-green-100 text-green-800"
+                    }`}
+                  >
+                    {user.role}
+                  </span>
+                </div>
+                <div className="mt-3 space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-500">Email:</span> {user.email}
+                  </div>
+                  {user.phone && (
+                    <div>
+                      <span className="text-gray-500">Phone:</span> {user.phone}
                     </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+                  )}
+                  <div>
+                    <span className="text-gray-500">Password:</span>{" "}
+                    <div className="inline-flex items-center space-x-1">
+                      <span className="font-mono">
+                        {visiblePasswordIds.includes(user.id) && user.password ? user.password : "********"}
+                      </span>
+                      {user.password && (
+                        <>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => togglePasswordVisibility(user.id)}
+                          >
+                            {visiblePasswordIds.includes(user.id) ? (
+                              <EyeOff className="h-3 w-3" />
+                            ) : (
+                              <Eye className="h-3 w-3" />
+                            )}
+                            <span className="sr-only">
+                              {visiblePasswordIds.includes(user.id) ? "Hide password" : "Show password"}
+                            </span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 w-6 p-0"
+                            onClick={() => user.password && copyToClipboard(user.password, user.id)}
+                          >
+                            {copiedId === user.id ? (
+                              <Check className="h-3 w-3 text-green-500" />
+                            ) : (
+                              <Copy className="h-3 w-3" />
+                            )}
+                            <span className="sr-only">Copy password</span>
+                          </Button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  {user.createdAt && (
+                    <div>
+                      <span className="text-gray-500">Created:</span> {new Date(user.createdAt).toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+                <div className="mt-4 flex justify-end gap-2 border-t pt-3">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedUser(user)
+                      setProfileImagePreview(user.image || "")
+                      setIsEditDialogOpen(true)
+                    }}
+                  >
+                    <Edit className="h-4 w-4 mr-1" />
+                    Edit
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedUser(user)
+                      setIsDeleteDialogOpen(true)
+                    }}
+                  >
+                    <Trash2 className="h-4 w-4 mr-1" />
+                    Delete
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Desktop table view */}
+          <div className="hidden md:block rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>User</TableHead>
+                  <TableHead>Username</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {filteredUsers.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 overflow-hidden rounded-full">
+                          <img
+                            src={user.image || `/placeholder.svg?height=40&width=40`}
+                            alt={user.name}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <span className="font-medium">{user.name}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>{user.username}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.phone || "-"}</TableCell>
+                    <TableCell>
+                      <span
+                        className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
+                          user.role === "agent"
+                            ? "bg-blue-100 text-blue-800"
+                            : user.role === "admin"
+                              ? "bg-purple-100 text-purple-800"
+                              : "bg-green-100 text-green-800"
+                        }`}
+                      >
+                        {user.role}
+                      </span>
+                    </TableCell>
+                    <TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}</TableCell>
+                    <TableCell className="text-right">
+                      <div className="flex justify-end gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setProfileImagePreview(user.image || "")
+                            setIsEditDialogOpen(true)
+                          }}
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => {
+                            setSelectedUser(user)
+                            setIsDeleteDialogOpen(true)
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </>
+      )}
 
       {/* Edit User Dialog */}
-      <Dialog open={isEditUserOpen} onOpenChange={setIsEditUserOpen}>
-        <DialogContent>
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit User</DialogTitle>
-            <DialogDescription>Update user information and settings.</DialogDescription>
+            <DialogDescription>Update user information.</DialogDescription>
           </DialogHeader>
-          {currentUser && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-name" className="text-right">
-                  Name
+          {selectedUser && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-profile-image">Profile Image</Label>
+                <div className="flex flex-col items-center gap-4">
+                  <div className="relative h-24 w-24 overflow-hidden rounded-full border-2 border-gray-200">
+                    {profileImagePreview || selectedUser.image ? (
+                      <img
+                        src={profileImagePreview || selectedUser.image || "/placeholder.svg"}
+                        alt="Profile preview"
+                        className="h-full w-full object-cover"
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-gray-100 text-gray-400">
+                        <span className="text-3xl">?</span>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Label
+                      htmlFor="edit-profile-upload"
+                      className="flex cursor-pointer items-center gap-2 rounded-md border border-gray-300 px-3 py-2 hover:bg-gray-50"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Change Image
+                    </Label>
+                    <Input
+                      id="edit-profile-upload"
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageChange}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">
+                  Full Name <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="edit-name"
-                  value={currentUser.name}
-                  onChange={(e) => setCurrentUser({ ...currentUser, name: e.target.value })}
-                  className="col-span-3"
+                  value={selectedUser.name}
+                  onChange={(e) => setSelectedUser({ ...selectedUser, name: e.target.value })}
+                  required
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-email" className="text-right">
-                  Email
+              <div className="space-y-2">
+                <Label htmlFor="edit-username">
+                  Username <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="edit-username"
+                  value={selectedUser.username}
+                  onChange={(e) => setSelectedUser({ ...selectedUser, username: e.target.value })}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">
+                  Email <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="edit-email"
                   type="email"
-                  value={currentUser.email}
-                  onChange={(e) => setCurrentUser({ ...currentUser, email: e.target.value })}
-                  className="col-span-3"
+                  value={selectedUser.email}
+                  onChange={(e) => setSelectedUser({ ...selectedUser, email: e.target.value })}
+                  required
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-phone" className="text-right">
-                  Phone
-                </Label>
-                <Input
-                  id="edit-phone"
-                  value={currentUser.phone}
-                  onChange={(e) => setCurrentUser({ ...currentUser, phone: e.target.value })}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-username" className="text-right">
-                  Username
-                </Label>
-                <Input
-                  id="edit-username"
-                  value={currentUser.username}
-                  onChange={(e) => setCurrentUser({ ...currentUser, username: e.target.value })}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-password" className="text-right">
-                  Password
+              <div className="space-y-2">
+                <Label htmlFor="edit-password">
+                  Password <span className="text-sm text-gray-500">(Leave blank to keep current password)</span>
                 </Label>
                 <Input
                   id="edit-password"
-                  type="password"
-                  placeholder="Leave blank to keep current password"
-                  onChange={(e) => setCurrentUser({ ...currentUser, password: e.target.value })}
-                  className="col-span-3"
+                  type="text"
+                  value={selectedUser.password || ""}
+                  onChange={(e) => setSelectedUser({ ...selectedUser, password: e.target.value })}
                 />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-role" className="text-right">
-                  Role
+              <div className="space-y-2">
+                <Label htmlFor="edit-phone">Phone</Label>
+                <Input
+                  id="edit-phone"
+                  value={selectedUser.phone || ""}
+                  onChange={(e) => setSelectedUser({ ...selectedUser, phone: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-role">
+                  Role <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={currentUser.role}
-                  onValueChange={(value) => setCurrentUser({ ...currentUser, role: value })}
+                  value={selectedUser.role}
+                  onValueChange={(value) => setSelectedUser({ ...selectedUser, role: value })}
                 >
-                  <SelectTrigger className="col-span-3">
+                  <SelectTrigger>
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="client">Client</SelectItem>
                     <SelectItem value="agent">Agent</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="edit-status" className="text-right">
-                  Status
-                </Label>
-                <Select
-                  value={currentUser.status}
-                  onValueChange={(value) => setCurrentUser({ ...currentUser, status: value })}
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="client">Client</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditUserOpen(false)}>
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
             <Button onClick={handleEditUser}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Delete User Dialog */}
+      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete User</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this user? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="py-4">
+              <p>
+                You are about to delete <strong>{selectedUser.name}</strong> ({selectedUser.email}).
+              </p>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteUser}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
-

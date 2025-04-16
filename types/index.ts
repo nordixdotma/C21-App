@@ -1,23 +1,35 @@
-export interface Project {
-  id: number
-  name: string
+export interface Guide {
+  title: string
+  subtitle: string
   image: string
-  location: string
-  developer: string
-  handover: string
-  price: string
-  paymentPlan?: string
-  status?: string
-}
-
-export interface NavItem {
-  href: string
-  label: string
 }
 
 export interface NavSection {
   label: string
-  items: NavItem[]
+  items: {
+    href: string
+    label: string
+  }[]
+}
+
+export interface NewsArticle {
+  id: number
+  title: string
+  excerpt: string
+  date: string
+  image: string
+  category: string
+  content: string[]
+}
+
+export interface Partner {
+  name: string
+  logo: string
+}
+
+export interface Stat {
+  value: string
+  label: string
 }
 
 export interface TeamMember {
@@ -29,28 +41,23 @@ export interface TeamMember {
   whatsapp: string
 }
 
-export interface NewsArticle {
+export interface Project {
   id: number
-  title: string
-  excerpt: string
-  date: string
-  image: string
-  category: string
-}
-
-export interface Stat {
-  value: string
-  label: string
-}
-
-export interface Guide {
-  title: string
-  subtitle: string
-  image: string
-}
-
-export interface Partner {
   name: string
-  logo: string
+  image: string
+  location: string
+  price: string
+  priceType?: string
+  type: string
+  status?: string
+  bedrooms?: string
+  bathrooms?: string
+  areaSize?: string
+  sizePostfix?: string
+  description?: string
+  features?: string[]
+  date: string
+  isNew: boolean
+  isFeatured: boolean
+  developer?: string
 }
-

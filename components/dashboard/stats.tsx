@@ -1,52 +1,123 @@
-import { BarChart3, Building2, CircleDollarSign, Home } from "lucide-react"
+"use client"
 
-const stats = [
-  {
-    name: "Total Projects",
-    value: "45",
-    change: "+4.75%",
-    icon: Building2,
-  },
-  {
-    name: "Active Listings",
-    value: "23",
-    change: "+10.25%",
-    icon: Home,
-  },
-  {
-    name: "Total Revenue",
-    value: "12.4M MAD",
-    change: "+12.5%",
-    icon: CircleDollarSign,
-  },
-  {
-    name: "Avg. Price",
-    value: "2.1M MAD",
-    change: "+8.2%",
-    icon: BarChart3,
-  },
-]
+import { useState, useEffect } from "react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Users, Home, FileText, Activity, Loader2 } from "lucide-react"
 
 export function DashboardStats() {
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalProperties: 0,
+    totalSubscribers: 0,
+    totalViews: 0,
+  })
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setIsLoading(true)
+        const token = localStorage.getItem("token")
+
+        if (!token) {
+          throw new Error("Authentication token not found")
+        }
+
+        const response = await fetch("/api/dashboard/stats", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || "Failed to fetch dashboard stats")
+        }
+
+        const data = await response.json()
+        setStats(data)
+      } catch (err) {
+        console.error("Error fetching dashboard stats:", err)
+        setError(err instanceof Error ? err.message : "An error occurred")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchStats()
+  }, [])
+
+  if (isLoading) {
+    return (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        {[...Array(4)].map((_, index) => (
+          <Card key={index}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Loading...</CardTitle>
+              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">-</div>
+              <p className="text-xs text-muted-foreground">Loading data...</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="rounded-md bg-red-50 p-4 text-red-700">
+        <p>Error loading dashboard statistics: {error}</p>
+        <p className="mt-2 text-sm">Please refresh the page or contact support if the problem persists.</p>
+      </div>
+    )
+  }
+
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-      {stats.map((stat) => (
-        <div key={stat.name} className="rounded-xl border bg-white p-6 shadow-sm transition-all hover:shadow-md">
-          <div className="flex items-center gap-4">
-            <div className="rounded-lg bg-primary/10 p-2">
-              <stat.icon className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <p className="font-oakes text-sm text-gray-500">{stat.name}</p>
-              <div className="flex items-baseline gap-2">
-                <p className="font-typold text-2xl font-semibold">{stat.value}</p>
-                <span className="text-xs font-medium text-green-600">{stat.change}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      ))}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Users</CardTitle>
+          <Users className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalUsers}</div>
+          <p className="text-xs text-muted-foreground">Registered users in the system</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Properties</CardTitle>
+          <Home className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalProperties}</div>
+          <p className="text-xs text-muted-foreground">Properties listed on the platform</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Newsletter Subscribers</CardTitle>
+          <FileText className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalSubscribers}</div>
+          <p className="text-xs text-muted-foreground">Subscribers to the newsletter</p>
+        </CardContent>
+      </Card>
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+          <CardTitle className="text-sm font-medium">Total Property Views</CardTitle>
+          <Activity className="h-4 w-4 text-muted-foreground" />
+        </CardHeader>
+        <CardContent>
+          <div className="text-2xl font-bold">{stats.totalViews}</div>
+          <p className="text-xs text-muted-foreground">Property page views</p>
+        </CardContent>
+      </Card>
     </div>
   )
 }
-

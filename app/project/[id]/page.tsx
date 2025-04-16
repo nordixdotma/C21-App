@@ -2,8 +2,7 @@
 
 import { useEffect, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
-import Image from "next/image"
-import { Loader2, PhoneIcon as WhatsApp, Heart, Share, ArrowLeft, MapPin, Bed, Bath, Square, Car } from "lucide-react"
+import { Loader2, PhoneIcon as WhatsApp, ArrowLeft } from "lucide-react"
 import { ProjectGallery } from "@/components/project/gallery"
 import { ProjectInfo } from "@/components/project/info"
 import { ProjectDetails } from "@/components/project/details"
@@ -15,70 +14,114 @@ import { SimilarProjects } from "@/components/project/similar-projects"
 import { ContactSidebar } from "@/components/project/contact-sidebar"
 import { Footer } from "@/components/footer"
 import { Navbar } from "@/components/navbar"
-import { featuredProjects } from "@/lib/constants"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-export default function ProjectPage({ params }: { params: { id: string } }) {
-  const [project, setProject] = useState<any>(null)
+// Import the tracking functions
+import { trackPropertyView, trackContactClick } from "@/lib/view-tracker"
+
+export default function ProjectPage({ params }) {
+  const [project, setProject] = useState(null)
+  const [agent, setAgent] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [showStickyHeader, setShowStickyHeader] = useState(false)
-  const mainContentRef = useRef<HTMLDivElement>(null)
+  const mainContentRef = useRef(null)
   const router = useRouter()
 
   useEffect(() => {
-    // In a real app, this would be an API call
-    const projectData = featuredProjects.find((p) => p.id === Number(params.id))
-    if (projectData) {
-      setProject({
-        ...projectData,
-        description:
-          "This luxurious property offers stunning views and modern amenities in the heart of Marrakech. Perfect for those seeking a blend of traditional Moroccan architecture and contemporary comfort.\n\nThe property features spacious living areas with high ceilings and large windows that allow natural light to flood in. The kitchen is fully equipped with modern appliances and custom cabinetry. The master bedroom includes a walk-in closet and an en-suite bathroom with a soaking tub and separate shower.\n\nOutdoor spaces include a private garden, swimming pool, and covered terrace perfect for entertaining. The property is located in a secure, gated community with 24-hour security.",
-        details: {
-          bedrooms: "4",
-          rooms: "6",
-          bathrooms: "3",
-          areaSize: "350",
-          sizePostfix: "m²",
-          landArea: "500",
-          landAreaPostfix: "m²",
-          garages: "2",
-          garageSize: "40m²",
-          propertyId: "MRK" + params.id,
-          yearBuilt: "2023",
-        },
-        features: [
-          "Air Conditioning",
-          "Swimming Pool",
-          "Garden",
-          "Security System",
-          "Parking",
-          "High Speed Internet",
-          "Balcony",
-          "Fireplace",
-          "Gym",
-          "Storage Room",
-          "Elevator",
-          "Smart Home System",
-        ],
-        video: "https://www.youtube.com/embed/dQw4w9WgXcQ",
-        address: "Avenue Mohammed VI, Marrakech",
-        coordinates: {
-          lat: 31.6295,
-          lng: -7.9811,
-        },
-        gallery: [
-          "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-          "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-          "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-          "https://images.unsplash.com/photo-1600585154526-990dced4db0d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-          "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-          "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
-        ],
-      })
+    const fetchProjectData = async () => {
+      try {
+        setIsLoading(true)
+
+        // Fetch project data
+        const projectResponse = await fetch(`/api/projects/${params.id}`)
+
+        if (!projectResponse.ok) {
+          if (projectResponse.status === 404) {
+            throw new Error("Project not found")
+          }
+          throw new Error("Failed to fetch project data")
+        }
+
+        const projectData = await projectResponse.json()
+
+        // Track the view when the project is loaded
+        trackPropertyView(params.id)
+
+        // Format the project data
+        const formattedProject = {
+          ...projectData,
+          name: projectData.name || projectData.title || "Untitled Property",
+          description: projectData.description || "No description available.",
+          details: {
+            bedrooms: projectData.bedrooms || "N/A",
+            rooms: projectData.rooms || "N/A",
+            bathrooms: projectData.bathrooms || "N/A",
+            areaSize: projectData.area_size || projectData.areaSize || "N/A",
+            sizePostfix: projectData.size_postfix || projectData.sizePostfix || "m²",
+            landArea: projectData.land_area || projectData.landArea || "N/A",
+            landAreaPostfix: projectData.land_area_postfix || projectData.landAreaPostfix || "m²",
+            garages: projectData.garages || "N/A",
+            garageSize: projectData.garage_size || projectData.garageSize || "N/A",
+            propertyId: projectData.project_id || projectData.projectId || params.id,
+            yearBuilt: projectData.year_built || projectData.yearBuilt || "N/A",
+          },
+          features: projectData.features || [],
+          video: projectData.video || projectData.videoUrl || "",
+          address: projectData.address || projectData.location || "No address provided",
+          coordinates: {
+            lat: Number.parseFloat(projectData.latitude) || 31.6295,
+            lng: Number.parseFloat(projectData.longitude) || -7.9811,
+          },
+          gallery: projectData.imageUrls || projectData.images || ["/placeholder.svg?height=600&width=800"],
+        }
+
+        setProject(formattedProject)
+
+        // Fetch agent data if available
+        if (projectData.assigned_agents && projectData.assigned_agents.length > 0) {
+          const agentId = projectData.assigned_agents[0]
+          const agentResponse = await fetch(`/api/agents/${agentId}`)
+
+          if (agentResponse.ok) {
+            const agentData = await agentResponse.json()
+            setAgent({
+              id: agentData.id,
+              name: agentData.name,
+              email: agentData.email,
+              phone: agentData.phone || "N/A",
+              image: agentData.image || "/placeholder.svg?height=200&width=200",
+            })
+          } else {
+            // Use default agent if API call fails
+            setAgent({
+              id: "1",
+              name: "Sadghi Mhamdi",
+              email: "sadghi@example.com",
+              phone: "06.64.72.24.88",
+              image: "https://th.bing.com/th/id/OIP.ZP-E8ZFH11wb1XSm0dn-5wHaJQ?rs=1&pid=ImgDetMain",
+            })
+          }
+        } else {
+          // Use default agent if no assigned agent
+          setAgent({
+            id: "1",
+            name: "Sadghi Mhamdi",
+            email: "sadghi@example.com",
+            phone: "06.64.72.24.88",
+            image: "https://th.bing.com/th/id/OIP.ZP-E8ZFH11wb1XSm0dn-5wHaJQ?rs=1&pid=ImgDetMain",
+          })
+        }
+      } catch (err) {
+        console.error("Error loading project:", err)
+        setError(err.message)
+      } finally {
+        setIsLoading(false)
+      }
     }
-    setIsLoading(false)
+
+    fetchProjectData()
   }, [params.id])
 
   useEffect(() => {
@@ -104,7 +147,7 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
     )
   }
 
-  if (!project) {
+  if (error || !project) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="max-w-md text-center px-4">
@@ -119,7 +162,9 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
             </svg>
           </div>
           <h2 className="text-2xl font-semibold mb-2">Property Not Found</h2>
-          <p className="text-gray-500 mb-6">The property you're looking for doesn't exist or has been removed.</p>
+          <p className="text-gray-500 mb-6">
+            {error || "The property you're looking for doesn't exist or has been removed."}
+          </p>
           <Button onClick={() => router.push("/")} className="inline-flex items-center">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Home
@@ -128,6 +173,9 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
       </div>
     )
   }
+
+  // Ensure project.name exists
+  const projectName = project.name || project.title || "Untitled Property"
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -149,7 +197,7 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
             {/* Main Content */}
             <div className="flex-grow lg:w-[70%]">
               <div className="space-y-10">
-                <ProjectGallery images={project.gallery} />
+                <ProjectGallery images={project.gallery || ["/placeholder.svg?height=600&width=800"]} />
 
                 {/* Mobile Tabs */}
                 <div className="lg:hidden">
@@ -163,21 +211,27 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
                     <TabsContent value="description" className="mt-6">
                       <h2 className="text-2xl font-semibold mb-4">Description</h2>
                       <div className="text-gray-600 leading-relaxed space-y-4">
-                        {project.description.split("\n\n").map((paragraph: string, i: number) => (
+                        {(project.description || "No description available.").split("\n\n").map((paragraph, i) => (
                           <p key={i}>{paragraph}</p>
                         ))}
                       </div>
                     </TabsContent>
                     <TabsContent value="details" className="mt-6">
-                      <ProjectDetails details={project.details} />
+                      <ProjectDetails details={project.details || {}} />
                     </TabsContent>
                     <TabsContent value="features" className="mt-6">
-                      <ProjectFeatures features={project.features} />
+                      <ProjectFeatures features={project.features || []} />
                     </TabsContent>
                     <TabsContent value="location" className="mt-6">
-                      <ProjectLocation address={project.address} coordinates={project.coordinates} />
+                      <ProjectLocation
+                        address={project.address || "No address provided"}
+                        coordinates={project.coordinates || { lat: 31.6295, lng: -7.9811 }}
+                      />
                       <div className="mt-8">
-                        <ProjectMap latitude={project.coordinates.lat} longitude={project.coordinates.lng} />
+                        <ProjectMap
+                          latitude={project.coordinates?.lat || 31.6295}
+                          longitude={project.coordinates?.lng || -7.9811}
+                        />
                       </div>
                     </TabsContent>
                   </Tabs>
@@ -188,22 +242,25 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
                   <div className="border-t border-gray-200 pt-8">
                     <h2 className="text-2xl font-semibold mb-4">Description</h2>
                     <div className="text-gray-600 leading-relaxed space-y-4">
-                      {project.description.split("\n\n").map((paragraph: string, i: number) => (
+                      {(project.description || "No description available.").split("\n\n").map((paragraph, i) => (
                         <p key={i}>{paragraph}</p>
                       ))}
                     </div>
                   </div>
 
                   <div className="border-t border-gray-200 pt-8">
-                    <ProjectDetails details={project.details} />
+                    <ProjectDetails details={project.details || {}} />
                   </div>
 
                   <div className="border-t border-gray-200 pt-8">
-                    <ProjectFeatures features={project.features} />
+                    <ProjectFeatures features={project.features || []} />
                   </div>
 
                   <div className="border-t border-gray-200 pt-8">
-                    <ProjectLocation address={project.address} coordinates={project.coordinates} />
+                    <ProjectLocation
+                      address={project.address || "No address provided"}
+                      coordinates={project.coordinates || { lat: 31.6295, lng: -7.9811 }}
+                    />
                   </div>
 
                   {project.video && (
@@ -213,7 +270,10 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
                   )}
 
                   <div className="border-t border-gray-200 pt-8">
-                    <ProjectMap latitude={project.coordinates.lat} longitude={project.coordinates.lng} />
+                    <ProjectMap
+                      latitude={project.coordinates?.lat || 31.6295}
+                      longitude={project.coordinates?.lng || -7.9811}
+                    />
                   </div>
                 </div>
 
@@ -226,7 +286,7 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
             {/* Sidebar */}
             <div className="lg:w-[30%]">
               <div className="sticky top-32" style={{ zIndex: 10 }}>
-                <ContactSidebar />
+                <ContactSidebar className="lg:sticky lg:top-24" agent={agent} />
               </div>
             </div>
           </div>
@@ -234,10 +294,11 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
 
         {/* Fixed WhatsApp Button (Mobile Only) */}
         <a
-          href={`https://wa.me/212664722488?text=Hi, I'm interested in ${project.name}`}
+          href={`https://wa.me/${agent?.phone?.replace(/\D/g, "")}?text=Hi, I'm interested in ${projectName}`}
           target="_blank"
           rel="noopener noreferrer"
           className="fixed bottom-6 right-6 z-50 lg:hidden"
+          onClick={() => trackContactClick(params.id)}
         >
           <Button className="h-14 w-14 rounded-full bg-green-500 hover:bg-green-600 shadow-lg">
             <WhatsApp className="h-6 w-6 text-white" />
@@ -248,4 +309,3 @@ export default function ProjectPage({ params }: { params: { id: string } }) {
     </div>
   )
 }
-

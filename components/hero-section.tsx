@@ -21,6 +21,7 @@ export function HeroSection() {
   const [activeIndex, setActiveIndex] = useState(0)
   const [isTyping, setIsTyping] = useState(true)
   const heroRef = useRef<HTMLElement>(null)
+  const [imageLoaded, setImageLoaded] = useState(false)
 
   // Set initial loaded state
   useEffect(() => {
@@ -106,8 +107,13 @@ export function HeroSection() {
           alt="Luxury property in Marrakech"
           fill
           priority
-          className="object-cover object-center"
-          quality={90}
+          className={cn(
+            "object-cover object-center transition-opacity duration-500",
+            imageLoaded ? "opacity-100" : "opacity-0",
+          )}
+          quality={75} // Reduced from 90 to 75 for better performance
+          onLoadingComplete={() => setImageLoaded(true)}
+          sizes="100vw" // Helps Next.js optimize the image better
         />
         <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/50 to-black/70" />
         <div className="absolute inset-0 bg-[url('/grid.png')] opacity-20" />
@@ -255,4 +261,3 @@ function TabButton({
     </button>
   )
 }
-

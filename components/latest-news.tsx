@@ -3,6 +3,7 @@ import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { CalendarDays, ChevronRight, ArrowRight } from "lucide-react"
 import { articles } from "@/lib/constants"
 import { cn } from "@/lib/utils"
+import Link from "next/link"
 
 export function LatestNews() {
   return (
@@ -13,17 +14,19 @@ export function LatestNews() {
             <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold">Latest News & Insights</h2>
             <div className="w-20 h-1 bg-primary mt-4 rounded-full"></div>
           </div>
-          <Button
-            className="bg-white text-primary rounded-full px-8 py-3 text-sm font-semibold uppercase tracking-wider border-2 border-primary hover:bg-primary hover:text-white transition-all duration-300 group flex items-center"
-            variant="outline"
-          >
-            <span>View All Articles</span>
-            <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
-          </Button>
+          <Link href="/blog">
+            <Button
+              className="bg-white text-primary rounded-full px-8 py-3 text-sm font-semibold uppercase tracking-wider border-2 border-primary hover:bg-primary hover:text-white transition-all duration-300 group flex items-center"
+              variant="outline"
+            >
+              <span>View All Articles</span>
+              <ChevronRight className="h-4 w-4 ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+            </Button>
+          </Link>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {articles.map((article, index) => (
+          {articles.slice(0, 3).map((article, index) => (
             <Card
               key={article.id}
               className={cn(
@@ -72,4 +75,3 @@ export function LatestNews() {
     </section>
   )
 }
-

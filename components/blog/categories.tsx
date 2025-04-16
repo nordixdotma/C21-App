@@ -1,6 +1,5 @@
 "use client"
 
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 
 const categories = [
@@ -11,9 +10,12 @@ const categories = [
   { id: "news", name: "News" },
 ]
 
-export function BlogCategories() {
-  const [activeCategory, setActiveCategory] = useState("all")
+interface BlogCategoriesProps {
+  activeCategory: string
+  setActiveCategory: (category: string) => void
+}
 
+export function BlogCategories({ activeCategory, setActiveCategory }: BlogCategoriesProps) {
   return (
     <section className="py-8 bg-gray-50 border-b">
       <div className="max-w-[1170px] mx-auto px-4">
@@ -35,4 +37,3 @@ export function BlogCategories() {
     </section>
   )
 }
-

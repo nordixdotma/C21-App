@@ -1,155 +1,277 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { format } from "date-fns"
+import { Search, CheckCircle, AlertCircle, HelpCircle } from "lucide-react"
+import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Calendar, User, ThumbsUp, ThumbsDown } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
-// Mock data for visit reports
-const visitReports = [
-  {
-    id: 1,
-    property: "Hivernage Villa",
-    date: new Date(2025, 2, 5, 10, 0), // March 5, 2025, 10:00 AM
-    agent: "Robert Chen",
-    visitor: "Mr. and Mrs. Thompson",
-    feedback: "Very interested in the property. Liked the garden and pool area. Had concerns about the kitchen size.",
-    impression: "positive",
-    notes: "Potential offer expected within a week. Follow-up scheduled.",
-  },
-  {
-    id: 2,
-    property: "Gueliz Apartment",
-    date: new Date(2025, 2, 10, 14, 0), // March 10, 2025, 2:00 PM
-    agent: "Sarah Johnson",
-    visitor: "Mr. Ahmed Hassan",
-    feedback:
-      "Liked the location but found the apartment too small for his needs. Price point was higher than expected.",
-    impression: "neutral",
-    notes: "Not likely to proceed with this property. Recommended alternative options.",
-  },
-  {
-    id: 3,
-    property: "Palm Grove Apartment",
-    date: new Date(2025, 1, 25, 11, 0), // February 25, 2025, 11:00 AM
-    agent: "Mohammed Al Fasi",
-    visitor: "Ms. Laura Smith",
-    feedback: "Very enthusiastic about the property. Loved the view and modern finishes. Ready to proceed.",
-    impression: "positive",
-    notes: "Requested second viewing with family members. High probability of offer.",
-  },
-  {
-    id: 4,
-    property: "Hivernage Villa",
-    date: new Date(2025, 1, 15, 15, 30), // February 15, 2025, 3:30 PM
-    agent: "Sarah Johnson",
-    visitor: "Mr. James Wilson",
-    feedback: "Found the property overpriced. Had concerns about the neighborhood and proximity to schools.",
-    impression: "negative",
-    notes: "Not interested in pursuing further. Requested information about other areas.",
-  },
-]
+interface Report {
+  id: string
+  date: string
+  clientId: string
+  clientName: string
+  propertyId: string
+  propertyName: string
+  propertyAddress: string
+  visitDate: string
+  visitorName: string
+  visitorContact: string
+  impression: string
+  feedback: string
+  notes: string
+  agentId: string
+  agentName: string
+  status: string
+}
 
 export function ClientReports() {
+  const [reports, setReports] = useState<Report[]>([])
+  const [filteredReports, setFilteredReports] = useState<Report[]>([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filterImpression, setFilterImpression] = useState("")
+  const [selectedReport, setSelectedReport] = useState<Report | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const token = localStorage.getItem("token")
+        if (!token) return
+
+        const response = await fetch("/api/reports", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch reports")
+        }
+
+        const data = await response.json()
+        setReports(data)
+        setFilteredReports(data)
+      } catch (error) {
+        console.error("Error fetching reports:", error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchReports()
+  }, [])
+
+  useEffect(() => {
+    let result = reports
+
+    // Apply impression filter
+    if (filterImpression && filterImpression !== "all") {
+      result = result.filter((report) => report.impression === filterImpression)
+    }
+
+    // Apply search term
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      result = result.filter(
+        (report) =>
+          report.propertyName.toLowerCase().includes(term) ||
+          report.propertyAddress.toLowerCase().includes(term) ||
+          report.agentName.toLowerCase().includes(term) ||
+          report.feedback.toLowerCase().includes(term),
+      )
+    }
+
+    setFilteredReports(result)
+  }, [reports, searchTerm, filterImpression])
+
+  const handleViewReport = (report: Report) => {
+    setSelectedReport(report)
+    setIsDialogOpen(true)
+  }
+
+  const getImpressionBadge = (impression: string) => {
+    switch (impression) {
+      case "positive":
+        return (
+          <Badge className="bg-green-100 text-green-800 hover:bg-green-200">
+            <CheckCircle className="mr-1 h-3 w-3" /> Positive
+          </Badge>
+        )
+      case "negative":
+        return (
+          <Badge className="bg-red-100 text-red-800 hover:bg-red-200">
+            <AlertCircle className="mr-1 h-3 w-3" /> Negative
+          </Badge>
+        )
+      default:
+        return (
+          <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200">
+            <HelpCircle className="mr-1 h-3 w-3" /> Neutral
+          </Badge>
+        )
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center py-10">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h2 className="font-typold text-2xl font-semibold">Property Visit Reports</h2>
+      <h2 className="font-typold text-xl md:text-2xl font-semibold mb-4 md:mb-6">Property Reports</h2>
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div className="relative flex-1">
+          <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+          <Input
+            placeholder="Search reports..."
+            className="pl-9"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className="w-full md:w-auto">
+          <Select value={filterImpression} onValueChange={setFilterImpression}>
+            <SelectTrigger className="w-full md:w-[180px]">
+              <SelectValue placeholder="Filter by impression" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All Impressions</SelectItem>
+              <SelectItem value="positive">Positive</SelectItem>
+              <SelectItem value="neutral">Neutral</SelectItem>
+              <SelectItem value="negative">Negative</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="space-y-6">
-        {visitReports.map((report) => (
-          <Card key={report.id}>
-            <CardHeader>
+      {filteredReports.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-10">
+            <div className="mb-2 h-12 w-12 text-gray-400">📋</div>
+            <p className="text-center text-gray-500">
+              {reports.length === 0
+                ? "No property visit reports available yet."
+                : "No reports match your search criteria."}
+            </p>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2">
+          {filteredReports.map((report) => (
+            <Card key={report.id} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <div className="flex justify-between">
+                  <CardTitle className="text-lg">{report.propertyName}</CardTitle>
+                  {getImpressionBadge(report.impression)}
+                </div>
+                <CardDescription>{report.propertyAddress}</CardDescription>
+              </CardHeader>
+              <CardContent className="pb-2">
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Agent:</span>
+                    <span className="font-medium">{report.agentName}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Visit Date:</span>
+                    <span className="font-medium">{format(new Date(report.visitDate), "MMM d, yyyy")}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Visitor:</span>
+                    <span className="font-medium">{report.visitorName}</span>
+                  </div>
+                  <div className="mt-2">
+                    <p className="line-clamp-2 text-sm text-gray-600">{report.feedback}</p>
+                  </div>
+                </div>
+              </CardContent>
+              <CardFooter className="pt-2">
+                <div className="flex w-full items-center justify-between">
+                  <span className="text-xs text-gray-500">
+                    Submitted: {format(new Date(report.date), "MMM d, yyyy")}
+                  </span>
+                  <Button variant="outline" size="sm" onClick={() => handleViewReport(report)}>
+                    View Details
+                  </Button>
+                </div>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        {selectedReport && (
+          <DialogContent className="max-h-[90vh] overflow-y-auto w-[95vw] max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Property Visit Report</DialogTitle>
+              <DialogDescription>
+                Submitted on {format(new Date(selectedReport.date), "MMMM d, yyyy")}
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-3 md:space-y-4 py-3 md:py-4">
               <div className="flex items-center justify-between">
-                <CardTitle>{report.property}</CardTitle>
-                <Badge
-                  className={
-                    report.impression === "positive"
-                      ? "bg-green-500"
-                      : report.impression === "neutral"
-                        ? "bg-amber-500"
-                        : "bg-red-500"
-                  }
-                >
-                  {report.impression.charAt(0).toUpperCase() + report.impression.slice(1)} Impression
-                </Badge>
+                <h3 className="text-lg font-medium">{selectedReport.propertyName}</h3>
+                {getImpressionBadge(selectedReport.impression)}
               </div>
-              <CardDescription>
-                Visit report from{" "}
-                {report.date.toLocaleDateString("en-US", {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-400" />
-                  <div>
-                    <p className="text-sm font-medium">Visit Date & Time</p>
-                    <p className="text-sm text-gray-500">
-                      {report.date.toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
-                      {" at "}
-                      {report.date.toLocaleTimeString("en-US", {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </p>
+
+              <div className="rounded-md bg-gray-50 p-4">
+                <h4 className="mb-2 font-medium">Property Details</h4>
+                <div className="grid gap-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Address:</span>
+                    <span>{selectedReport.propertyAddress}</span>
                   </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-gray-400" />
-                  <div>
-                    <p className="text-sm font-medium">Agent</p>
-                    <p className="text-sm text-gray-500">{report.agent}</p>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Agent:</span>
+                    <span>{selectedReport.agentName}</span>
                   </div>
                 </div>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium mb-1">Visitor</h3>
-                  <p className="text-sm text-gray-700">{report.visitor}</p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium mb-1">Visitor Feedback</h3>
-                  <p className="text-sm text-gray-700">{report.feedback}</p>
-                </div>
-
-                <div>
-                  <h3 className="text-sm font-medium mb-1">Agent Notes</h3>
-                  <p className="text-sm text-gray-700">{report.notes}</p>
+              <div className="rounded-md bg-gray-50 p-4">
+                <h4 className="mb-2 font-medium">Visit Information</h4>
+                <div className="grid gap-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Visit Date:</span>
+                    <span>{format(new Date(selectedReport.visitDate), "MMMM d, yyyy")}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Visitor Name:</span>
+                    <span>{selectedReport.visitorName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500">Contact:</span>
+                    <span>{selectedReport.visitorContact}</span>
+                  </div>
                 </div>
               </div>
-            </CardContent>
-            <CardFooter className="flex justify-between">
-              <div className="flex items-center gap-2">
-                <div className="flex items-center gap-1">
-                  {report.impression === "positive" ? (
-                    <ThumbsUp className="h-4 w-4 text-green-500" />
-                  ) : report.impression === "negative" ? (
-                    <ThumbsDown className="h-4 w-4 text-red-500" />
-                  ) : (
-                    <div className="flex">
-                      <ThumbsUp className="h-4 w-4 text-amber-500" />
-                      <ThumbsDown className="h-4 w-4 text-amber-500" />
-                    </div>
-                  )}
-                </div>
-                <span className="text-sm text-gray-500">
-                  Overall impression: {report.impression.charAt(0).toUpperCase() + report.impression.slice(1)}
-                </span>
+
+              <div>
+                <h4 className="mb-2 font-medium">Visitor Feedback</h4>
+                <p className="whitespace-pre-wrap rounded-md border p-3 text-sm">{selectedReport.feedback}</p>
               </div>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+
+              {selectedReport.notes && (
+                <div>
+                  <h4 className="mb-2 font-medium">Agent Notes</h4>
+                  <p className="whitespace-pre-wrap rounded-md border p-3 text-sm">{selectedReport.notes}</p>
+                </div>
+              )}
+            </div>
+          </DialogContent>
+        )}
+      </Dialog>
     </div>
   )
 }
-

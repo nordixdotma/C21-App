@@ -2,12 +2,13 @@
 
 import type React from "react"
 
-import { useCallback } from "react"
+import { useCallback, useEffect } from "react"
 import { useDropzone } from "react-dropzone"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Upload, X } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
 
 interface MediaUploadProps {
   data: any
@@ -16,18 +17,69 @@ interface MediaUploadProps {
   onBack: () => void
 }
 
+// Add a function to convert File to base64 string
+const fileToBase64 = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.readAsDataURL(file)
+    reader.onload = () => resolve(reader.result as string)
+    reader.onerror = (error) => reject(error)
+  })
+}
+
 export function MediaUpload({ data, updateData, onNext, onBack }: MediaUploadProps) {
+  // Convert files to data URLs when files are added
+  useEffect(() => {
+    const convertFilesToDataURLs = async () => {
+      if (data.images && data.images.length > 0) {
+        const promises = data.images.map((file: File) => fileToBase64(file))
+        const dataURLs = await Promise.all(promises)
+
+        // Only add new URLs that don't already exist
+        const existingUrls = new Set(data.imageUrls)
+        const newUrls = dataURLs.filter((url) => !existingUrls.has(url))
+
+        if (newUrls.length > 0) {
+          updateData({ imageUrls: [...data.imageUrls, ...newUrls] })
+        }
+      }
+    }
+
+    // Only convert if we have new images
+    if (data.images.length > 0) {
+      convertFilesToDataURLs()
+    }
+  }, [data.images, data.imageUrls, updateData])
+
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
-      updateData({ images: [...data.images, ...acceptedFiles] })
+      // Limit to 50 files total
+      const totalFiles = [...data.images, ...acceptedFiles]
+      if (totalFiles.length > 50) {
+        toast({
+          title: "Too many files",
+          description: "You can upload a maximum of 50 images",
+          variant: "destructive",
+        })
+        return
+      }
+
+      updateData({ images: totalFiles })
     },
     [data.images, updateData],
   )
 
   const removeImage = (index: number) => {
     const newImages = [...data.images]
+    const newImageUrls = [...data.imageUrls]
+
     newImages.splice(index, 1)
-    updateData({ images: newImages })
+    newImageUrls.splice(index, 1)
+
+    updateData({
+      images: newImages,
+      imageUrls: newImageUrls,
+    })
   }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -40,8 +92,12 @@ export function MediaUpload({ data, updateData, onNext, onBack }: MediaUploadPro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (data.images.length === 0) {
-      alert("Please upload at least one image")
+    if (data.imageUrls.length === 0) {
+      toast({
+        title: "Missing images",
+        description: "Please upload at least one image",
+        variant: "destructive",
+      })
       return
     }
     onNext()
@@ -52,7 +108,7 @@ export function MediaUpload({ data, updateData, onNext, onBack }: MediaUploadPro
       <div className="space-y-4">
         <div>
           <Label>
-            Images ({data.images.length} / 50) <span className="text-red-500">*</span>
+            Images ({data.imageUrls.length} / 50) <span className="text-red-500">*</span>
           </Label>
           <div
             {...getRootProps()}
@@ -60,17 +116,17 @@ export function MediaUpload({ data, updateData, onNext, onBack }: MediaUploadPro
               isDragActive ? "border-primary bg-primary/10" : "border-gray-700 hover:border-primary/50"
             }`}
           >
-            <input {...getInputProps()} required={data.images.length === 0} />
+            <input {...getInputProps()} />
             <Upload className="mx-auto h-12 w-12 text-gray-400" />
             <p className="mt-2 text-sm text-gray-300">Drag and drop images here, or click to select files</p>
             <p className="mt-1 text-xs text-gray-500">(Minimum size 1440x900)</p>
           </div>
-          {data.images.length > 0 && (
+          {data.imageUrls.length > 0 && (
             <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-              {data.images.map((file: File, index: number) => (
+              {data.imageUrls.map((url: string, index: number) => (
                 <div key={index} className="group relative aspect-video rounded-lg overflow-hidden">
                   <img
-                    src={URL.createObjectURL(file) || "/placeholder.svg"}
+                    src={url || "/placeholder.svg"}
                     alt={`Upload ${index + 1}`}
                     className="h-full w-full object-cover"
                   />
@@ -111,4 +167,3 @@ export function MediaUpload({ data, updateData, onNext, onBack }: MediaUploadPro
     </form>
   )
 }
-

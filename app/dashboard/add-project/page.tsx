@@ -8,6 +8,7 @@ import { PropertyDetails } from "@/components/dashboard/add-project/property-det
 import { PropertyFeatures } from "@/components/dashboard/add-project/property-features"
 import { PropertyLocation } from "@/components/dashboard/add-project/property-location"
 import { Progress } from "@/components/ui/progress"
+import { toast } from "@/hooks/use-toast"
 
 const steps = [
   { id: 1, name: "Basic Info" },
@@ -19,6 +20,7 @@ const steps = [
 
 export default function AddProjectPage() {
   const [currentStep, setCurrentStep] = useState(1)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     // Basic Info
     title: "",
@@ -27,9 +29,12 @@ export default function AddProjectPage() {
     status: "",
     priceType: "sale",
     price: "",
+    ownerId: "", // Added owner ID field
+    assignedAgents: [] as string[], // Added assigned agents field
 
     // Media
     images: [] as File[],
+    imageUrls: [] as string[], // To store data URLs for images
     videoUrl: "",
 
     // Details
@@ -42,7 +47,6 @@ export default function AddProjectPage() {
     landAreaPostfix: "sqft",
     garages: "",
     garageSize: "",
-    propertyId: "",
     yearBuilt: "",
 
     // Features
@@ -52,6 +56,8 @@ export default function AddProjectPage() {
     address: "",
     city: "",
     area: "",
+    state: "",
+    country: "Morocco",
     zipCode: "",
     latitude: "",
     longitude: "",
@@ -60,8 +66,23 @@ export default function AddProjectPage() {
   const router = useRouter()
 
   const handleNext = () => {
-    if (currentStep === 2 && formData.images.length === 0) {
-      alert("Please upload at least one image")
+    if (currentStep === 1) {
+      if (!formData.title || !formData.price) {
+        toast({
+          title: "Missing required fields",
+          description: "Please fill in all required fields.",
+          variant: "destructive",
+        })
+        return
+      }
+    }
+
+    if (currentStep === 2 && formData.imageUrls.length === 0) {
+      toast({
+        title: "Missing images",
+        description: "Please upload at least one image",
+        variant: "destructive",
+      })
       return
     }
     setCurrentStep((prev) => Math.min(prev + 1, steps.length))
@@ -71,9 +92,75 @@ export default function AddProjectPage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1))
   }
 
-  const handleSubmit = () => {
-    console.log("Form submitted:", formData)
-    router.push("/dashboard")
+  const handleSubmit = async () => {
+    if (!formData.title || !formData.price) {
+      toast({
+        title: "Missing required fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+
+      // Convert property type and status to match database enum values
+      const propertyTypeMap: Record<string, string> = {
+        apartment: "Apartment",
+        house: "House",
+        villa: "Villa",
+        commercial: "Commercial",
+        land: "Land",
+        office: "Commercial",
+        industrial: "Commercial",
+      }
+
+      const statusMap: Record<string, string> = {
+        available: "For Sale",
+        sold: "Sold",
+        rented: "Rented",
+      }
+
+      // Prepare data for API
+      const projectData = {
+        ...formData,
+        type: propertyTypeMap[formData.type] || "Apartment",
+        status: formData.priceType === "rent" ? "For Rent" : statusMap[formData.status] || "For Sale",
+      }
+
+      const response = await fetch("/api/projects", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(projectData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to create project")
+      }
+
+      const result = await response.json()
+
+      toast({
+        title: "Success",
+        description: "Property added successfully.",
+      })
+
+      // Redirect to the projects list
+      router.push("/dashboard")
+    } catch (error: any) {
+      console.error("Error saving project:", error)
+      toast({
+        title: "Error",
+        description: error.message || "There was an error saving the property. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const updateFormData = (data: Partial<typeof formData>) => {
@@ -82,8 +169,6 @@ export default function AddProjectPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
-      {" "}
-      {/* Changed background class */}
       <div className="mx-auto max-w-4xl">
         <div className="mb-8">
           <h1 className="font-typold text-3xl font-semibold text-white">Add New Project</h1>
@@ -103,8 +188,6 @@ export default function AddProjectPage() {
         </div>
 
         <div className="rounded-xl border bg-white p-6 shadow-lg">
-          {" "}
-          {/* Changed form container class */}
           {currentStep === 1 && <BasicInfo data={formData} updateData={updateFormData} onNext={handleNext} />}
           {currentStep === 2 && (
             <MediaUpload data={formData} updateData={updateFormData} onNext={handleNext} onBack={handleBack} />
@@ -116,11 +199,16 @@ export default function AddProjectPage() {
             <PropertyFeatures data={formData} updateData={updateFormData} onNext={handleNext} onBack={handleBack} />
           )}
           {currentStep === 5 && (
-            <PropertyLocation data={formData} updateData={updateFormData} onSubmit={handleSubmit} onBack={handleBack} />
+            <PropertyLocation
+              data={formData}
+              updateData={updateFormData}
+              onSubmit={handleSubmit}
+              onBack={handleBack}
+              isSubmitting={isSubmitting}
+            />
           )}
         </div>
       </div>
     </div>
   )
 }
-

@@ -1,6 +1,5 @@
 import Image from "next/image"
-import { Button } from "@/components/ui/button"
-import { ArrowRight, Briefcase, PencilRuler, Building, BarChart4, CreditCard } from "lucide-react"
+import { Briefcase, PencilRuler, Building, BarChart4, CreditCard } from "lucide-react"
 
 const services = [
   {
@@ -113,10 +112,6 @@ export function ServicesGrid() {
                     </div>
                   ))}
                 </div>
-
-                <Button className="bg-primary hover:bg-primary/90">
-                  Learn More <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
               </div>
             </div>
           ))}
@@ -125,4 +120,3 @@ export function ServicesGrid() {
     </section>
   )
 }
-

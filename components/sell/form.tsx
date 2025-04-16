@@ -215,4 +215,3 @@ export function SellForm() {
     </div>
   )
 }
-

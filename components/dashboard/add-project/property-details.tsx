@@ -148,4 +148,3 @@ export function PropertyDetails({ data, updateData, onNext, onBack }: PropertyDe
     </form>
   )
 }
-

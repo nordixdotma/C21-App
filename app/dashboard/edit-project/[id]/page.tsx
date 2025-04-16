@@ -8,8 +8,8 @@ import { PropertyDetails } from "@/components/dashboard/add-project/property-det
 import { PropertyFeatures } from "@/components/dashboard/add-project/property-features"
 import { PropertyLocation } from "@/components/dashboard/add-project/property-location"
 import { Progress } from "@/components/ui/progress"
-import { featuredProjects } from "@/lib/constants"
 import { Loader2 } from "lucide-react"
+import { toast } from "@/hooks/use-toast"
 
 const steps = [
   { id: 1, name: "Basic Info" },
@@ -22,6 +22,7 @@ const steps = [
 export default function EditProjectPage({ params }: { params: { id: string } }) {
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -29,7 +30,10 @@ export default function EditProjectPage({ params }: { params: { id: string } }) 
     status: "",
     priceType: "sale",
     price: "",
+    ownerId: "",
+    assignedAgents: [] as string[],
     images: [] as File[],
+    imageUrls: [] as string[],
     videoUrl: "",
     bedrooms: "",
     rooms: "",
@@ -40,12 +44,13 @@ export default function EditProjectPage({ params }: { params: { id: string } }) 
     landAreaPostfix: "sqft",
     garages: "",
     garageSize: "",
-    propertyId: "",
     yearBuilt: "",
     features: [] as string[],
     address: "",
     city: "",
     area: "",
+    state: "",
+    country: "Morocco",
     zipCode: "",
     latitude: "",
     longitude: "",
@@ -55,26 +60,110 @@ export default function EditProjectPage({ params }: { params: { id: string } }) 
 
   // Fetch project data
   useEffect(() => {
-    // In a real app, this would be an API call
-    const project = featuredProjects.find((p) => p.id === Number.parseInt(params.id))
-    if (project) {
-      setFormData((prevData) => ({
-        ...prevData,
-        title: project.name,
-        description: "Sample description", // You would get this from your API
-        price: project.price,
-        address: project.location,
-        // ... populate other fields
-      }))
+    const fetchProject = async () => {
+      try {
+        setIsLoading(true)
+        const response = await fetch(`/api/projects/${params.id}`)
+
+        if (!response.ok) {
+          throw new Error("Failed to fetch project")
+        }
+
+        const project = await response.json()
+
+        // Map database fields to form fields
+        setFormData({
+          title: project.title || "",
+          description: project.description || "",
+          price: project.price?.toString() || "",
+          priceType: project.status === "For Rent" ? "rent" : "sale",
+          type: project.property_type?.toLowerCase() || "apartment",
+          status:
+            project.status === "For Sale"
+              ? "available"
+              : project.status === "For Rent"
+                ? "available"
+                : project.status?.toLowerCase() || "available",
+          ownerId: project.owner_id?.toString() || "",
+          assignedAgents: project.assignedAgents?.map((id: number) => id.toString()) || [],
+          images: [],
+          imageUrls: project.images || [],
+          videoUrl: project.youtube_url || "",
+          bedrooms: project.bedrooms?.toString() || "",
+          rooms: project.rooms?.toString() || "",
+          bathrooms: project.bathrooms?.toString() || "",
+          areaSize: project.area?.toString() || "",
+          sizePostfix: project.area_unit || "sqft",
+          landArea: "",
+          landAreaPostfix: "sqft",
+          garages: "",
+          garageSize: "",
+          yearBuilt: project.year_built?.toString() || "",
+          features: project.features || [],
+          address: project.address || "",
+          city: project.city || "",
+          area: project.neighborhood || "",
+          state: project.state || "",
+          country: project.country || "Morocco",
+          zipCode: project.zip_code || "",
+          latitude: project.latitude?.toString() || "",
+          longitude: project.longitude?.toString() || "",
+        })
+
+        setIsLoading(false)
+      } catch (error) {
+        console.error("Error fetching project:", error)
+        toast({
+          title: "Error",
+          description: "Failed to load project. Please try again.",
+          variant: "destructive",
+        })
+        router.push("/dashboard")
+      }
     }
-    setIsLoading(false)
-  }, [params.id])
+
+    fetchProject()
+  }, [params.id, router])
 
   const handleNext = () => {
-    if (currentStep === 2 && formData.images.length === 0) {
-      alert("Please upload at least one image")
+    // Basic validation for step 1
+    if (currentStep === 1) {
+      if (!formData.title) {
+        toast({
+          title: "Missing information",
+          description: "Please enter a property title",
+          variant: "destructive",
+        })
+        return
+      }
+      if (!formData.ownerId) {
+        toast({
+          title: "Missing information",
+          description: "Please select a property owner",
+          variant: "destructive",
+        })
+        return
+      }
+      if (!formData.assignedAgents || formData.assignedAgents.length === 0) {
+        toast({
+          title: "Missing information",
+          description: "Please assign at least one agent",
+          variant: "destructive",
+        })
+        return
+      }
+    }
+
+    // Media validation for step 2
+    if (currentStep === 2 && formData.imageUrls.length === 0 && formData.images.length === 0) {
+      toast({
+        title: "Missing images",
+        description: "Please upload at least one image",
+        variant: "destructive",
+      })
       return
     }
+
     setCurrentStep((prev) => Math.min(prev + 1, steps.length))
   }
 
@@ -82,10 +171,64 @@ export default function EditProjectPage({ params }: { params: { id: string } }) 
     setCurrentStep((prev) => Math.max(prev - 1, 1))
   }
 
-  const handleSubmit = () => {
-    // Here you would update the project via API
-    console.log("Project updated:", formData)
-    router.push("/dashboard")
+  const handleSubmit = async () => {
+    try {
+      setIsSubmitting(true)
+
+      // Convert property type and status to match database enum values
+      const propertyTypeMap: Record<string, string> = {
+        apartment: "Apartment",
+        house: "House",
+        villa: "Villa",
+        commercial: "Commercial",
+        land: "Land",
+        office: "Commercial",
+        industrial: "Commercial",
+      }
+
+      const statusMap: Record<string, string> = {
+        available: "For Sale",
+        sold: "Sold",
+        rented: "Rented",
+      }
+
+      // Prepare data for API
+      const projectData = {
+        ...formData,
+        type: propertyTypeMap[formData.type] || "Apartment",
+        status: formData.priceType === "rent" ? "For Rent" : statusMap[formData.status] || "For Sale",
+      }
+
+      const response = await fetch(`/api/projects/${params.id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(projectData),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || "Failed to update project")
+      }
+
+      toast({
+        title: "Success",
+        description: "Property updated successfully.",
+      })
+
+      // Redirect to the projects list
+      router.push("/dashboard")
+    } catch (error: any) {
+      console.error("Error updating project:", error)
+      toast({
+        title: "Error",
+        description: error.message || "There was an error updating the property. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const updateFormData = (data: Partial<typeof formData>) => {
@@ -132,11 +275,16 @@ export default function EditProjectPage({ params }: { params: { id: string } }) 
             <PropertyFeatures data={formData} updateData={updateFormData} onNext={handleNext} onBack={handleBack} />
           )}
           {currentStep === 5 && (
-            <PropertyLocation data={formData} updateData={updateFormData} onSubmit={handleSubmit} onBack={handleBack} />
+            <PropertyLocation
+              data={formData}
+              updateData={updateFormData}
+              onSubmit={handleSubmit}
+              onBack={handleBack}
+              isSubmitting={isSubmitting}
+            />
           )}
         </div>
       </div>
     </div>
   )
 }
-

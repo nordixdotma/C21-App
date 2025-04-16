@@ -1,28 +1,97 @@
 "use client"
 
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { LogOut } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Menu, Search } from "lucide-react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { DashboardNav } from "./nav"
+import { useEffect, useState } from "react"
 
 export function DashboardHeader() {
   const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+
+  useEffect(() => {
+    const userStr = localStorage.getItem("user")
+    if (userStr) {
+      try {
+        const userData = JSON.parse(userStr)
+        setUser(userData)
+      } catch (error) {
+        console.error("Error parsing user data:", error)
+      }
+    }
+  }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem("isAuthenticated")
-    localStorage.removeItem("userRole")
+    localStorage.removeItem("token")
+    localStorage.removeItem("user")
     router.push("/login")
   }
 
   return (
-    <header className="border-b bg-white">
-      <div className="flex h-16 items-center justify-between px-6">
-        <h2 className="font-typold text-lg font-semibold">Admin Dashboard</h2>
-        <Button variant="ghost" onClick={handleLogout} className="text-red-500 hover:text-red-600 hover:bg-red-50">
-          <LogOut className="mr-2 h-4 w-4" />
-          Logout
-        </Button>
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b bg-white px-4 md:px-6">
+      <div className="flex items-center gap-2 md:hidden">
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="ghost" size="icon" className="md:hidden">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="left" className="p-0">
+            <DashboardNav isMobile />
+          </SheetContent>
+        </Sheet>
+        <Link href="/dashboard" className="md:hidden">
+          <span className="font-typold text-lg font-bold text-primary">CENTURY 21</span>
+        </Link>
+      </div>
+
+      <div className="relative hidden md:flex">
+        <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
+        <Input
+          type="search"
+          placeholder="Search..."
+          className="w-64 rounded-lg bg-gray-50 pl-8 focus-visible:ring-primary"
+        />
+      </div>
+
+      <div className="flex items-center gap-4">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+              <Avatar className="h-8 w-8">
+                <AvatarImage src="/placeholder.svg" alt="Avatar" />
+                <AvatarFallback>
+                  {user?.name
+                    ?.split(" ")
+                    .map((n: string) => n[0])
+                    .join("") || "AD"}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>{user?.name || "My Account"}</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem>Profile</DropdownMenuItem>
+            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   )
 }
-

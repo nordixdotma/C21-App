@@ -34,6 +34,9 @@ export function NavDropdown({
   onMouseEnter: () => void
   onMouseLeave: () => void
 }) {
+  // Convert label to lowercase for use in query params
+  const category = label.toLowerCase()
+
   return (
     <div className="relative z-50" onMouseEnter={onMouseEnter} onMouseLeave={onMouseLeave}>
       <button
@@ -64,7 +67,7 @@ export function NavDropdown({
             {items.map((item) => (
               <li key={item.href} className="hover:bg-gray-50">
                 <Link
-                  href={item.href}
+                  href={`/search?category=${category}&type=${encodeURIComponent(item.label)}`}
                   className="block px-4 py-2.5 text-sm text-gray-800 hover:text-primary transition-colors duration-150"
                 >
                   {item.label}
@@ -94,4 +97,3 @@ export function MobileNavSection({ title, items }: { title: string; items: { hre
     </div>
   )
 }
-

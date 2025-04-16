@@ -35,4 +35,3 @@ export function AboutMission() {
     </section>
   )
 }
-

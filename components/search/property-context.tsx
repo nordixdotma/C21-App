@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { createContext, useContext, useState } from "react"
 import type { Project } from "@/types"
 
@@ -11,7 +10,11 @@ interface PropertyContextType {
   properties: Project[]
 }
 
-const PropertyContext = createContext<PropertyContextType | undefined>(undefined)
+const PropertyContext = createContext<PropertyContextType>({
+  hoveredProperty: null,
+  setHoveredProperty: () => {},
+  properties: [],
+})
 
 export function PropertyProvider({
   children,
@@ -36,10 +39,5 @@ export function PropertyProvider({
 }
 
 export function useProperty() {
-  const context = useContext(PropertyContext)
-  if (context === undefined) {
-    throw new Error("useProperty must be used within a PropertyProvider")
-  }
-  return context
+  return useContext(PropertyContext)
 }
-

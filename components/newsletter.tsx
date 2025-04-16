@@ -2,31 +2,50 @@
 
 import type React from "react"
 import { useState } from "react"
-import { ArrowRight, Send } from "lucide-react"
+import { ArrowRight, Send, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 export function Newsletter() {
   const [email, setEmail] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setError(null)
 
-    // Simulate API call
-    setTimeout(() => {
-      console.log("Subscribe:", email)
-      setIsSubmitting(false)
+    try {
+      const response = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to subscribe")
+      }
+
       setIsSubmitted(true)
 
       // Reset form after success
       setTimeout(() => {
         setIsSubmitted(false)
         setEmail("")
-      }, 3000)
-    }, 1000)
+      }, 5000)
+    } catch (err) {
+      console.error("Error subscribing to newsletter:", err)
+      setError(err instanceof Error ? err.message : "Failed to subscribe")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -46,6 +65,13 @@ export function Newsletter() {
             <p className="text-white/80 text-base md:text-lg mb-8 sm:mb-10">
               Subscribe to our newsletter for exclusive property listings and market updates
             </p>
+
+            {error && (
+              <Alert variant="destructive" className="mb-6 bg-red-500/10 text-red-500 border-red-500/20">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
             {isSubmitted ? (
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 text-white">
@@ -107,4 +133,3 @@ export function Newsletter() {
     </section>
   )
 }
-

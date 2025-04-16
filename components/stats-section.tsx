@@ -2,19 +2,25 @@
 
 import { useEffect, useRef, useState } from "react"
 import { stats } from "@/lib/constants"
-import { cn } from "@/lib/utils"
 
 function useCountAnimation(end: number, duration = 2000) {
   const [count, setCount] = useState(0)
   const countRef = useRef<HTMLDivElement | null>(null)
   const [isIntersecting, setIsIntersecting] = useState(false)
+  const hasAnimated = useRef(false)
 
   useEffect(() => {
+    // Skip if already animated
+    if (hasAnimated.current) {
+      setCount(end)
+      return
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
         setIsIntersecting(entry.isIntersecting)
       },
-      { threshold: 0.1 },
+      { threshold: 0.1, rootMargin: "0px 0px 100px 0px" },
     )
 
     const currentRef = countRef.current
@@ -30,7 +36,7 @@ function useCountAnimation(end: number, duration = 2000) {
   }, [])
 
   useEffect(() => {
-    if (!isIntersecting) return
+    if (!isIntersecting || hasAnimated.current) return
 
     let startTimestamp: number | null = null
     const step = (timestamp: number) => {
@@ -41,6 +47,8 @@ function useCountAnimation(end: number, duration = 2000) {
 
       if (progress < 1) {
         window.requestAnimationFrame(step)
+      } else {
+        hasAnimated.current = true
       }
     }
 
@@ -59,10 +67,10 @@ function StatItem({ value, label, index }: { value: string; label: string; index
 
   return (
     <div
-      className={cn("text-center transform transition-all duration-700", "hover:scale-105")}
+      className="text-center transform transition-all duration-700 hover:scale-105"
       ref={ref}
       style={{
-        transitionDelay: `${index * 100}ms`,
+        transitionDelay: `${index * 50}ms`, // Reduced from 100ms to 50ms
       }}
     >
       <div className="relative">
@@ -90,4 +98,3 @@ export function StatsSection() {
     </section>
   )
 }
-

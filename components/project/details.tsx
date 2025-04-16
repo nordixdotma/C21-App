@@ -22,6 +22,25 @@ export function ProjectDetails({ details, className }: ProjectDetailsProps) {
   return (
     <div className={className}>
       <h2 className="text-2xl font-semibold mb-6">Property Details</h2>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {details.areaSize && (
+          <div className="flex justify-between py-2 border-b">
+            <span className="text-gray-600">Area Size</span>
+            <span className="font-medium">
+              {details.areaSize} {details.sizePostfix || "m²"}
+            </span>
+          </div>
+        )}
+
+        {details.landArea && (
+          <div className="flex justify-between py-2 border-b">
+            <span className="text-gray-600">Land Area</span>
+            <span className="font-medium">
+              {details.landArea} {details.landAreaPostfix || "m²"}
+            </span>
+          </div>
+        )}
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         <DetailItem icon={<Bed className="h-5 w-5 text-primary" />} label="Bedrooms" value={details.bedrooms} />
         <DetailItem icon={<Home className="h-5 w-5 text-primary" />} label="Rooms" value={details.rooms} />
@@ -62,4 +81,3 @@ function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: stri
     </div>
   )
 }
-
