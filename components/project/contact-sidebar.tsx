@@ -32,9 +32,8 @@ export function ContactSidebar({ className, agent, projectId }: ContactSidebarPr
     phone: "",
     message: "",
   })
-  \
-  const [isSubmitting, setIsSubmitting(false
-  )
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSubmitted, setIsSubmitted] = useState(false)
 
   // Use the provided agent or default to Sadghi Mhamdi
