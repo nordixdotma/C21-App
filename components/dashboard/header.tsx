@@ -16,27 +16,13 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
 import { DashboardNav } from "./nav"
-import { useEffect, useState } from "react"
 
 export function DashboardHeader() {
   const router = useRouter()
-  const [user, setUser] = useState<any>(null)
-
-  useEffect(() => {
-    const userStr = localStorage.getItem("user")
-    if (userStr) {
-      try {
-        const userData = JSON.parse(userStr)
-        setUser(userData)
-      } catch (error) {
-        console.error("Error parsing user data:", error)
-      }
-    }
-  }, [])
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("user")
+    localStorage.removeItem("isAuthenticated")
+    localStorage.removeItem("userRole")
     router.push("/login")
   }
 
@@ -74,17 +60,12 @@ export function DashboardHeader() {
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
               <Avatar className="h-8 w-8">
                 <AvatarImage src="/placeholder.svg" alt="Avatar" />
-                <AvatarFallback>
-                  {user?.name
-                    ?.split(" ")
-                    .map((n: string) => n[0])
-                    .join("") || "AD"}
-                </AvatarFallback>
+                <AvatarFallback>AD</AvatarFallback>
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{user?.name || "My Account"}</DropdownMenuLabel>
+            <DropdownMenuLabel>My Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem>Profile</DropdownMenuItem>
             <DropdownMenuItem>Settings</DropdownMenuItem>

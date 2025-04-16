@@ -4,75 +4,37 @@ import { useRef, useState, useEffect } from "react"
 import { Swiper, SwiperSlide } from "swiper/react"
 import type { Swiper as SwiperType } from "swiper"
 import { Autoplay, Navigation, Pagination } from "swiper/modules"
-import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ProjectCard } from "@/components/shared/project-card"
 import "swiper/css"
 import "swiper/css/pagination"
-import type { Project } from "@/types"
 
 export function LatestProjects({}: {}) {
-  const [projects, setProjects] = useState<Project[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [projects, setProjects] = useState([])
 
   useEffect(() => {
-    const fetchLatestProjects = async () => {
-      try {
-        setIsLoading(true)
-        const response = await fetch("/api/projects/latest?limit=8")
+    const savedProjects = localStorage.getItem("projects")
+    if (savedProjects) {
+      const allProjects = JSON.parse(savedProjects)
+      // Get the most recent projects (sort by date if available, or just take the last 8)
+      const sortedProjects = allProjects
+        .filter((project) => project.status === "available") // Only show available projects
+        .sort((a, b) => {
+          // Sort by created date if available
+          if (a.createdAt && b.createdAt) {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          }
+          return 0
+        })
+        .slice(0, 8) // Take the most recent 8 projects
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch latest projects")
-        }
-
-        const data = await response.json()
-        setProjects(data.projects || [])
-      } catch (err) {
-        console.error("Error fetching latest projects:", err)
-        setError("Failed to load latest projects")
-      } finally {
-        setIsLoading(false)
-      }
+      setProjects(sortedProjects)
     }
-
-    fetchLatestProjects()
   }, [])
 
   const swiperRef = useRef<SwiperType | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
-
-  if (isLoading) {
-    return (
-      <section className="py-16 sm:py-20 md:py-24 bg-black relative overflow-hidden">
-        <div className="max-w-[1170px] mx-auto px-4 flex justify-center items-center py-20">
-          <div className="flex flex-col items-center gap-4">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
-            <p className="text-white text-lg">Loading latest projects...</p>
-          </div>
-        </div>
-      </section>
-    )
-  }
-
-  if (error) {
-    return (
-      <section className="py-16 sm:py-20 md:py-24 bg-black relative overflow-hidden">
-        <div className="max-w-[1170px] mx-auto px-4 flex justify-center items-center py-20">
-          <div className="text-center">
-            <p className="text-white text-lg">{error}</p>
-            <Button
-              variant="outline"
-              className="mt-4 border-white/20 text-black hover:bg-white/10"
-              onClick={() => window.location.reload()}
-            >
-              Try Again
-            </Button>
-          </div>
-        </div>
-      </section>
-    )
-  }
 
   if (projects.length === 0) {
     return (

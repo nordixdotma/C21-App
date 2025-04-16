@@ -27,33 +27,13 @@ export default function DashboardPage() {
   }, [searchParams])
 
   useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const token = localStorage.getItem("token")
-        const user = localStorage.getItem("user")
+    const isAuthenticated = localStorage.getItem("isAuthenticated")
+    const userRole = localStorage.getItem("userRole")
 
-        if (!token || !user) {
-          router.push("/login")
-          return
-        }
-
-        const userData = JSON.parse(user)
-
-        if (userData.role !== "admin") {
-          router.push("/login")
-          return
-        }
-
-        // Verify token on client-side (basic check)
-        // For a more secure approach, you could make an API call to verify the token
-        setTimeout(() => setIsLoading(false), 500)
-      } catch (error) {
-        console.error("Authentication error:", error)
-        router.push("/login")
-      }
+    if (!isAuthenticated || userRole !== "admin") {
+      router.push("/login")
     }
-
-    checkAuth()
+    setTimeout(() => setIsLoading(false), 500)
   }, [router])
 
   if (isLoading) {

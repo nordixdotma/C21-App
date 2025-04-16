@@ -8,61 +8,36 @@ import { Badge } from "@/components/ui/badge"
 import { Search, Phone, Mail, Home, FileText, Users } from "lucide-react"
 import Link from "next/link"
 
-interface Client {
-  id: string
-  name: string
-  email: string
-  phone: string
-  properties: number
-  lastContact: string
-  status: string
-}
-
 export function AgentClients() {
   const [searchQuery, setSearchQuery] = useState("")
-  const [clientsData, setClientsData] = useState<Client[]>([])
+  const [clientsData, setClientsData] = useState([])
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const token = localStorage.getItem("token")
-        if (!token) return
+    const agentId = localStorage.getItem("userId")
 
-        // Fetch clients
-        const clientsResponse = await fetch("/api/clients", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+    // Get users data
+    const savedUsers = localStorage.getItem("users")
+    const savedProjects = localStorage.getItem("projects")
 
-        if (!clientsResponse.ok) {
-          throw new Error("Failed to fetch clients")
-        }
+    if (savedUsers && savedProjects && agentId) {
+      const allUsers = JSON.parse(savedUsers)
+      const allProjects = JSON.parse(savedProjects)
 
-        const clientsData = await clientsResponse.json()
+      // Get projects assigned to this agent
+      const agentProjects = allProjects.filter(
+        (project) => project.assignedAgents && project.assignedAgents.includes(agentId),
+      )
 
-        // Fetch projects to count properties per client
-        const projectsResponse = await fetch("/api/projects", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+      // Get unique client IDs from these projects
+      const clientIds = [...new Set(agentProjects.map((project) => project.ownerId))]
 
-        if (!projectsResponse.ok) {
-          throw new Error("Failed to fetch projects")
-        }
-
-        const projectsData = await projectsResponse.json()
-
-        // Format client data with property counts
-        const formattedClients = clientsData.map((client) => {
-          // Count properties for this client
-          const clientProperties = projectsData.filter((project) => project.ownerId === client.id)
-
-          // Generate last contact date
-          const lastContactOptions = ["Today", "Yesterday", "2 days ago", "1 week ago"]
-          const lastContact = lastContactOptions[Math.floor(Math.random() * lastContactOptions.length)]
+      // Get client details
+      const clients = allUsers
+        .filter((user) => user.role === "client" && clientIds.includes(user.id))
+        .map((client) => {
+          // Count properties for this client that are assigned to this agent
+          const clientProperties = agentProjects.filter((project) => project.ownerId === client.id)
 
           return {
             id: client.id,
@@ -70,20 +45,15 @@ export function AgentClients() {
             email: client.email,
             phone: client.phone || "+212 6XX XXX XXX",
             properties: clientProperties.length,
-            lastContact,
+            lastContact: ["Today", "Yesterday", "2 days ago", "1 week ago"][Math.floor(Math.random() * 4)],
             status: "active",
           }
         })
 
-        setClientsData(formattedClients)
-      } catch (error) {
-        console.error("Error fetching clients:", error)
-      } finally {
-        setIsLoading(false)
-      }
+      setClientsData(clients)
     }
 
-    fetchClients()
+    setIsLoading(false)
   }, [])
 
   const filteredClients = clientsData.filter(

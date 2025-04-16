@@ -3,126 +3,139 @@
 import type React from "react"
 
 import { useState } from "react"
-import Image from "next/image"
 import { useRouter } from "next/navigation"
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { ExclamationTriangleIcon } from "@radix-ui/react-icons"
-import { Loader2 } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { toast } from "@/hooks/use-toast"
 
 export default function ClientLoginPage() {
   const router = useRouter()
-  const [username, setUsername] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+  })
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+    setFormData((prev) => ({ ...prev, [name]: value }))
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
     setIsLoading(true)
 
-    try {
-      const response = await fetch("/api/auth/client-login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      })
+    // Simulate API call to check credentials
+    setTimeout(() => {
+      // Get users from localStorage
+      const storedUsers = localStorage.getItem("users")
+      const users = storedUsers ? JSON.parse(storedUsers) : []
 
-      const data = await response.json()
+      // Find user with matching credentials
+      const user = users.find((u: any) => u.username === formData.username && u.password === formData.password)
 
-      if (!response.ok) {
-        throw new Error(data.error || "Login failed")
+      if (user) {
+        // Set authentication state
+        localStorage.setItem("isAuthenticated", "true")
+        localStorage.setItem("userRole", user.role)
+        localStorage.setItem("username", user.name)
+        localStorage.setItem("userId", user.id)
+        localStorage.setItem("userEmail", user.email)
+
+        // Redirect based on role
+        if (user.role === "agent") {
+          router.push("/agent-dashboard")
+        } else {
+          router.push("/client-dashboard")
+        }
+
+        toast({
+          title: "Login successful",
+          description: `Welcome back, ${user.name}!`,
+        })
+      } else {
+        toast({
+          title: "Login failed",
+          description: "Invalid username or password. Please try again.",
+          variant: "destructive",
+        })
+        setIsLoading(false)
       }
-
-      // Store token and user info in localStorage
-      localStorage.setItem("token", data.token)
-      localStorage.setItem("user", JSON.stringify(data.user))
-
-      // Redirect to client dashboard
-      router.push("/client-dashboard")
-    } catch (error) {
-      console.error("Login error:", error)
-      setError(error instanceof Error ? error.message : "An error occurred during login")
-    } finally {
-      setIsLoading(false)
-    }
+    }, 1000)
   }
 
   return (
-    <div className="min-h-screen bg-black">
-      <div className="container relative flex min-h-screen flex-col items-center justify-center md:grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-        <div className="relative hidden h-full flex-col bg-muted p-10 dark:border-r lg:flex">
-          <div className="absolute inset-0">
-            <Image src="/herobackground.jpg" alt="Authentication background" fill className="object-cover opacity-50" />
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/50 to-black/60" />
+    <div className="flex min-h-screen flex-col bg-gray-50">
+      <div className="container mx-auto flex max-w-screen-xl flex-1 items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md space-y-8 rounded-xl bg-white p-8 shadow-lg">
+          <div className="flex flex-col items-center space-y-2 text-center">
+            <Image src="/C21 logo rbz.png" alt="CENTURY 21" width={150} height={75} />
+            <h1 className="font-typold text-2xl font-bold">Client & Agent Portal</h1>
+            <p className="text-sm text-gray-500">Access your personalized real estate dashboard</p>
           </div>
-          <div className="relative z-20 flex items-center text-lg font-medium">
-            <Image src="/C21 logo rbz.png" alt="CENTURY 21" width={120} height={60} className="w-32" />
-          </div>
-          <div className="relative z-20 mt-auto">
-            <blockquote className="space-y-2">
-              <p className="text-lg font-typold text-white">"The best investment on Earth is earth."</p>
-              <footer className="text-sm font-oakes text-white/80">Louis Glickman</footer>
-            </blockquote>
-          </div>
-        </div>
-        <div className="lg:p-8">
-          <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-            <div className="flex flex-col space-y-2 text-center">
-              <h1 className="text-2xl font-typold font-semibold tracking-tight text-white">Client Login</h1>
-              <p className="text-sm font-oakes text-muted-foreground">Sign in to access your client dashboard</p>
-            </div>
 
-            {error && (
-              <Alert variant="destructive">
-                <ExclamationTriangleIcon className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="help">Need Help?</TabsTrigger>
+            </TabsList>
+            <TabsContent value="login">
+              <form onSubmit={handleSubmit} className="space-y-6 pt-4">
+                <div className="space-y-2">
+                  <Label htmlFor="username">Username</Label>
+                  <Input
+                    id="username"
+                    name="username"
+                    placeholder="Enter your username"
+                    required
+                    value={formData.username}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="password">Password</Label>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="Enter your password"
+                    required
+                    value={formData.password}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Logging in..." : "Login"}
+                </Button>
+              </form>
+            </TabsContent>
+            <TabsContent value="help">
+              <div className="space-y-4 pt-4">
+                <p className="text-sm text-gray-600">
+                  If you're having trouble logging in, please contact our support team:
+                </p>
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-sm font-medium">Contact Support</p>
+                  <p className="text-sm text-gray-500">Email: support@century21.ma</p>
+                  <p className="text-sm text-gray-500">Phone: +212 5 24 33 44 55</p>
+                </div>
+                <p className="text-xs text-gray-500">
+                  Our support team is available Monday to Friday, 9:00 AM to 6:00 PM.
+                </p>
+              </div>
+            </TabsContent>
+          </Tabs>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Input
-                  type="text"
-                  placeholder="Username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <div className="space-y-2">
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
-                  required
-                  disabled={isLoading}
-                />
-              </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Logging in...
-                  </>
-                ) : (
-                  "Login as Client"
-                )}
-              </Button>
-            </form>
-            <div className="text-center text-sm text-gray-400">
-              <a href="/login" className="text-primary hover:underline">
-                Admin access
+          <div className="mt-4 text-center text-sm text-gray-500">
+            <p>
+              Don't have an account?{" "}
+              <a href="/contact" className="font-medium text-primary hover:underline">
+                Contact us
               </a>
-            </div>
+            </p>
           </div>
         </div>
       </div>

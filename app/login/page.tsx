@@ -9,46 +9,32 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { ExclamationTriangleIcon } from "@radix-ui/react-icons"
-import { Loader2 } from "lucide-react"
+
+// This would come from your backend in a real application
+const ADMIN_CREDENTIALS = {
+  username: "admin",
+  password: "admin123",
+}
 
 export default function AdminLoginPage() {
   const router = useRouter()
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-    setIsLoading(true)
 
-    try {
-      const response = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ username, password }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Login failed")
-      }
-
-      // Store token and user info in localStorage
-      localStorage.setItem("token", data.token)
-      localStorage.setItem("user", JSON.stringify(data.user))
-
-      // Redirect to dashboard
+    if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+      // In a real application, you would:
+      // 1. Make an API call to verify credentials
+      // 2. Receive and store a JWT token
+      // 3. Set up proper session management
+      localStorage.setItem("isAuthenticated", "true")
+      localStorage.setItem("userRole", "admin")
       router.push("/dashboard")
-    } catch (error) {
-      console.error("Login error:", error)
-      setError(error instanceof Error ? error.message : "An error occurred during login")
-    } finally {
-      setIsLoading(false)
+    } else {
+      setError("Invalid username or password")
     }
   }
 
@@ -93,7 +79,6 @@ export default function AdminLoginPage() {
                   onChange={(e) => setUsername(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
                   required
-                  disabled={isLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -104,18 +89,10 @@ export default function AdminLoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="bg-white/10 border-white/20 text-white placeholder:text-gray-400"
                   required
-                  disabled={isLoading}
                 />
               </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Logging in...
-                  </>
-                ) : (
-                  "Login as Admin"
-                )}
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90">
+                Login as Admin
               </Button>
             </form>
             <div className="text-center text-sm text-gray-400">

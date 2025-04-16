@@ -14,114 +14,192 @@ import { SimilarProjects } from "@/components/project/similar-projects"
 import { ContactSidebar } from "@/components/project/contact-sidebar"
 import { Footer } from "@/components/footer"
 import { Navbar } from "@/components/navbar"
+import { featuredProjects } from "@/lib/constants"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // Import the tracking functions
 import { trackPropertyView, trackContactClick } from "@/lib/view-tracker"
 
+// Update the getProjectAgent function to use real data from localStorage
+function getProjectAgent(projectId) {
+  try {
+    // Try to get assigned agents from localStorage
+    const storedProjects = localStorage.getItem("projects")
+    const storedUsers = localStorage.getItem("users")
+
+    if (storedProjects && storedUsers) {
+      const projects = JSON.parse(storedProjects)
+      const users = JSON.parse(storedUsers)
+
+      // Find the project
+      const project = projects.find(
+        (p) => p.id?.toString() === projectId || (p.projectId && p.projectId.toString() === projectId),
+      )
+
+      if (project && project.assignedAgents && project.assignedAgents.length > 0) {
+        // Get the first assigned agent
+        const agentId = project.assignedAgents[0]
+        const agent = users.find((u) => u.id === agentId)
+
+        if (agent) {
+          return {
+            id: agent.id,
+            name: agent.name,
+            email: agent.email,
+            phone: agent.phone || "N/A",
+            image: agent.image || "/placeholder.svg?height=200&width=200",
+          }
+        }
+      }
+    }
+
+    // Fallback to mock data if no agent found
+    const agents = [
+      {
+        id: "1",
+        name: "Sadghi Mhamdi",
+        email: "sadghi@example.com",
+        phone: "06.64.72.24.88",
+        image: "https://th.bing.com/th/id/OIP.ZP-E8ZFH11wb1XSm0dn-5wHaJQ?rs=1&pid=ImgDetMain",
+      },
+      {
+        id: "2",
+        name: "Ahmed Hassan",
+        email: "ahmed@example.com",
+        phone: "06.55.33.22.11",
+        image: "/placeholder.svg?height=200&width=200",
+      },
+    ]
+
+    // For demo purposes, assign different agents based on even/odd project IDs
+    const numericId = Number.parseInt(projectId, 10)
+    return isNaN(numericId) || numericId % 2 === 0 ? agents[0] : agents[1]
+  } catch (error) {
+    console.error("Error getting project agent:", error)
+    return {
+      id: "1",
+      name: "Sadghi Mhamdi",
+      email: "sadghi@example.com",
+      phone: "06.64.72.24.88",
+      image: "https://th.bing.com/th/id/OIP.ZP-E8ZFH11wb1XSm0dn-5wHaJQ?rs=1&pid=ImgDetMain",
+    }
+  }
+}
+
 export default function ProjectPage({ params }) {
   const [project, setProject] = useState(null)
-  const [agent, setAgent] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState(null)
   const [showStickyHeader, setShowStickyHeader] = useState(false)
   const mainContentRef = useRef(null)
   const router = useRouter()
 
   useEffect(() => {
-    const fetchProjectData = async () => {
+    // First try to load from localStorage
+    const loadProject = () => {
       try {
-        setIsLoading(true)
+        const storedProjects = localStorage.getItem("projects")
+        if (storedProjects) {
+          const projects = JSON.parse(storedProjects)
+          // Convert params.id to string to ensure proper comparison
+          const projectId = params.id.toString()
+          const projectData = projects.find(
+            (p) => p.id?.toString() === projectId || (p.projectId && p.projectId.toString() === projectId),
+          )
 
-        // Fetch project data
-        const projectResponse = await fetch(`/api/projects/${params.id}`)
+          if (projectData) {
+            // Track the view when the project is loaded
+            trackPropertyView(projectId)
 
-        if (!projectResponse.ok) {
-          if (projectResponse.status === 404) {
-            throw new Error("Project not found")
-          }
-          throw new Error("Failed to fetch project data")
-        }
-
-        const projectData = await projectResponse.json()
-
-        // Track the view when the project is loaded
-        trackPropertyView(params.id)
-
-        // Format the project data
-        const formattedProject = {
-          ...projectData,
-          name: projectData.name || projectData.title || "Untitled Property",
-          description: projectData.description || "No description available.",
-          details: {
-            bedrooms: projectData.bedrooms || "N/A",
-            rooms: projectData.rooms || "N/A",
-            bathrooms: projectData.bathrooms || "N/A",
-            areaSize: projectData.area_size || projectData.areaSize || "N/A",
-            sizePostfix: projectData.size_postfix || projectData.sizePostfix || "m²",
-            landArea: projectData.land_area || projectData.landArea || "N/A",
-            landAreaPostfix: projectData.land_area_postfix || projectData.landAreaPostfix || "m²",
-            garages: projectData.garages || "N/A",
-            garageSize: projectData.garage_size || projectData.garageSize || "N/A",
-            propertyId: projectData.project_id || projectData.projectId || params.id,
-            yearBuilt: projectData.year_built || projectData.yearBuilt || "N/A",
-          },
-          features: projectData.features || [],
-          video: projectData.video || projectData.videoUrl || "",
-          address: projectData.address || projectData.location || "No address provided",
-          coordinates: {
-            lat: Number.parseFloat(projectData.latitude) || 31.6295,
-            lng: Number.parseFloat(projectData.longitude) || -7.9811,
-          },
-          gallery: projectData.imageUrls || projectData.images || ["/placeholder.svg?height=600&width=800"],
-        }
-
-        setProject(formattedProject)
-
-        // Fetch agent data if available
-        if (projectData.assigned_agents && projectData.assigned_agents.length > 0) {
-          const agentId = projectData.assigned_agents[0]
-          const agentResponse = await fetch(`/api/agents/${agentId}`)
-
-          if (agentResponse.ok) {
-            const agentData = await agentResponse.json()
-            setAgent({
-              id: agentData.id,
-              name: agentData.name,
-              email: agentData.email,
-              phone: agentData.phone || "N/A",
-              image: agentData.image || "/placeholder.svg?height=200&width=200",
+            setProject({
+              ...projectData,
+              name: projectData.name || projectData.title || "Untitled Property",
+              description: projectData.description || "No description available.",
+              details: {
+                bedrooms: projectData.bedrooms || "N/A",
+                rooms: projectData.rooms || "N/A",
+                bathrooms: projectData.bathrooms || "N/A",
+                areaSize: projectData.areaSize || "N/A",
+                sizePostfix: projectData.sizePostfix || "m²",
+                landArea: projectData.landArea || "N/A",
+                landAreaPostfix: projectData.landAreaPostfix || "m²",
+                garages: projectData.garages || "N/A",
+                garageSize: projectData.garageSize || "N/A",
+                propertyId: projectData.projectId || projectId,
+                yearBuilt: projectData.yearBuilt || "N/A",
+              },
+              features: projectData.features || [],
+              video: projectData.video || projectData.videoUrl || "",
+              address: projectData.address || projectData.location || "No address provided",
+              coordinates: {
+                lat: Number.parseFloat(projectData.latitude) || 31.6295,
+                lng: Number.parseFloat(projectData.longitude) || -7.9811,
+              },
+              gallery: projectData.imageUrls || projectData.images || ["/placeholder.svg?height=600&width=800"],
             })
-          } else {
-            // Use default agent if API call fails
-            setAgent({
-              id: "1",
-              name: "Sadghi Mhamdi",
-              email: "sadghi@example.com",
-              phone: "06.64.72.24.88",
-              image: "https://th.bing.com/th/id/OIP.ZP-E8ZFH11wb1XSm0dn-5wHaJQ?rs=1&pid=ImgDetMain",
-            })
+            return true
           }
-        } else {
-          // Use default agent if no assigned agent
-          setAgent({
-            id: "1",
-            name: "Sadghi Mhamdi",
-            email: "sadghi@example.com",
-            phone: "06.64.72.24.88",
-            image: "https://th.bing.com/th/id/OIP.ZP-E8ZFH11wb1XSm0dn-5wHaJQ?rs=1&pid=ImgDetMain",
-          })
         }
-      } catch (err) {
-        console.error("Error loading project:", err)
-        setError(err.message)
-      } finally {
-        setIsLoading(false)
+        return false
+      } catch (error) {
+        console.error("Error loading project:", error)
+        return false
       }
     }
 
-    fetchProjectData()
+    // If not found in localStorage, try the mock data
+    if (!loadProject()) {
+      const projectData = featuredProjects.find((p) => p.id === Number(params.id))
+      if (projectData) {
+        setProject({
+          ...projectData,
+          description:
+            "This luxurious property offers stunning views and modern amenities in the heart of Marrakech. Perfect for those seeking a blend of traditional Moroccan architecture and contemporary comfort.\n\nThe property features spacious living areas with high ceilings and large windows that allow natural light to flood in. The kitchen is fully equipped with modern appliances and custom cabinetry. The master bedroom includes a walk-in closet and an en-suite bathroom with a soaking tub and separate shower.\n\nOutdoor spaces include a private garden, swimming pool, and covered terrace perfect for entertaining. The property is located in a secure, gated community with 24-hour security.",
+          details: {
+            bedrooms: "4",
+            rooms: "6",
+            bathrooms: "3",
+            areaSize: "350",
+            sizePostfix: "m²",
+            landArea: "500",
+            landAreaPostfix: "m²",
+            garages: "2",
+            garageSize: "40m²",
+            propertyId: "MRK" + params.id,
+            yearBuilt: "2023",
+          },
+          features: [
+            "Air Conditioning",
+            "Swimming Pool",
+            "Garden",
+            "Security System",
+            "Parking",
+            "High Speed Internet",
+            "Balcony",
+            "Fireplace",
+            "Gym",
+            "Storage Room",
+            "Elevator",
+            "Smart Home System",
+          ],
+          video: "https://www.youtube.com/embed/dQw4w9WgXcQ",
+          address: "Avenue Mohammed VI, Marrakech",
+          coordinates: {
+            lat: 31.6295,
+            lng: -7.9811,
+          },
+          gallery: [
+            "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1600573472550-8090b5e0745e?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1600566753376-12c8ab7fb75b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1600585154526-990dced4db0d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+            "https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80",
+          ],
+        })
+      }
+    }
+    setIsLoading(false)
   }, [params.id])
 
   useEffect(() => {
@@ -147,7 +225,7 @@ export default function ProjectPage({ params }) {
     )
   }
 
-  if (error || !project) {
+  if (!project) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="max-w-md text-center px-4">
@@ -162,9 +240,7 @@ export default function ProjectPage({ params }) {
             </svg>
           </div>
           <h2 className="text-2xl font-semibold mb-2">Property Not Found</h2>
-          <p className="text-gray-500 mb-6">
-            {error || "The property you're looking for doesn't exist or has been removed."}
-          </p>
+          <p className="text-gray-500 mb-6">The property you're looking for doesn't exist or has been removed.</p>
           <Button onClick={() => router.push("/")} className="inline-flex items-center">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Home
@@ -286,7 +362,7 @@ export default function ProjectPage({ params }) {
             {/* Sidebar */}
             <div className="lg:w-[30%]">
               <div className="sticky top-32" style={{ zIndex: 10 }}>
-                <ContactSidebar className="lg:sticky lg:top-24" agent={agent} />
+                <ContactSidebar className="lg:sticky lg:top-24" agent={getProjectAgent(params.id)} />
               </div>
             </div>
           </div>
@@ -294,7 +370,7 @@ export default function ProjectPage({ params }) {
 
         {/* Fixed WhatsApp Button (Mobile Only) */}
         <a
-          href={`https://wa.me/${agent?.phone?.replace(/\D/g, "")}?text=Hi, I'm interested in ${projectName}`}
+          href={`https://wa.me/212664722488?text=Hi, I'm interested in ${projectName}`}
           target="_blank"
           rel="noopener noreferrer"
           className="fixed bottom-6 right-6 z-50 lg:hidden"

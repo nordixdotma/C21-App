@@ -17,20 +17,28 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Edit, Trash2, UserPlus, Upload, Eye, EyeOff, Copy, Check, Loader2 } from "lucide-react"
+import { Edit, Trash2, UserPlus, Upload, Eye, EyeOff, Copy, Check } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface User {
-  id: number
+  id: string
   name: string
   username: string
   email: string
-  password?: string
+  password: string
+  hashedPassword?: string
   role: string
   image?: string
   phone?: string
   createdAt?: string
+}
+
+// Simple hash function for demonstration purposes
+const hashPassword = (password: string): string => {
+  return Array.from(password)
+    .map((char) => "*")
+    .join("")
 }
 
 export function UsersList() {
@@ -39,7 +47,7 @@ export function UsersList() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [newUser, setNewUser] = useState<User>({
-    id: 0,
+    id: "",
     name: "",
     username: "",
     email: "",
@@ -51,49 +59,24 @@ export function UsersList() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [profileImage, setProfileImage] = useState<File | null>(null)
   const [profileImagePreview, setProfileImagePreview] = useState<string>("")
-  const [visiblePasswordIds, setVisiblePasswordIds] = useState<number[]>([])
-  const [copiedId, setCopiedId] = useState<number | null>(null)
+  const [visiblePasswordIds, setVisiblePasswordIds] = useState<string[]>([])
+  const [copiedId, setCopiedId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
-  // Load users from API on component mount
+  // Load users from localStorage on component mount
   useEffect(() => {
-    fetchUsers()
+    const storedUsers = localStorage.getItem("users")
+    if (storedUsers) {
+      setUsers(JSON.parse(storedUsers))
+    }
   }, [])
 
-  const fetchUsers = async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
+  // Save users to localStorage whenever the users state changes
+  useEffect(() => {
+    localStorage.setItem("users", JSON.stringify(users))
+  }, [users])
 
-      const token = localStorage.getItem("token")
-      if (!token) {
-        throw new Error("Authentication token not found")
-      }
-
-      const response = await fetch("/api/users", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to fetch users")
-      }
-
-      const data = await response.json()
-      setUsers(data)
-    } catch (err) {
-      console.error("Error fetching users:", err)
-      setError(err instanceof Error ? err.message : "An error occurred")
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleAddUser = async () => {
+  const handleAddUser = () => {
     if (!newUser.name || !newUser.username || !newUser.email || !newUser.password) {
       toast({
         title: "Missing information",
@@ -103,58 +86,36 @@ export function UsersList() {
       return
     }
 
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        throw new Error("Authentication token not found")
-      }
-
-      const response = await fetch("/api/users", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(newUser),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to add user")
-      }
-
-      const addedUser = await response.json()
-
-      setUsers((prevUsers) => [...prevUsers, addedUser])
-      setNewUser({
-        id: 0,
-        name: "",
-        username: "",
-        email: "",
-        password: "",
-        role: "client",
-        image: "",
-        phone: "",
-      })
-      setProfileImage(null)
-      setProfileImagePreview("")
-      setIsAddDialogOpen(false)
-
-      toast({
-        title: "User added",
-        description: `${addedUser.name} has been added successfully.`,
-      })
-    } catch (err) {
-      console.error("Error adding user:", err)
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "An error occurred while adding user",
-        variant: "destructive",
-      })
+    const userWithId = {
+      ...newUser,
+      id: Date.now().toString(),
+      image: profileImagePreview || `/placeholder.svg?height=200&width=200`,
+      hashedPassword: hashPassword(newUser.password),
+      createdAt: new Date().toISOString().split("T")[0],
     }
+
+    setUsers((prevUsers) => [...prevUsers, userWithId])
+    setNewUser({
+      id: "",
+      name: "",
+      username: "",
+      email: "",
+      password: "",
+      role: "client",
+      image: "",
+      phone: "",
+    })
+    setProfileImage(null)
+    setProfileImagePreview("")
+    setIsAddDialogOpen(false)
+
+    toast({
+      title: "User added",
+      description: `${userWithId.name} has been added successfully.`,
+    })
   }
 
-  const handleEditUser = async () => {
+  const handleEditUser = () => {
     if (!selectedUser || !selectedUser.name || !selectedUser.username || !selectedUser.email) {
       toast({
         title: "Missing information",
@@ -164,85 +125,39 @@ export function UsersList() {
       return
     }
 
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        throw new Error("Authentication token not found")
-      }
+    setUsers((prevUsers) =>
+      prevUsers.map((user) =>
+        user.id === selectedUser.id
+          ? {
+              ...selectedUser,
+              image: profileImagePreview || selectedUser.image,
+              hashedPassword: selectedUser.password ? hashPassword(selectedUser.password) : user.hashedPassword,
+            }
+          : user,
+      ),
+    )
+    setSelectedUser(null)
+    setProfileImage(null)
+    setProfileImagePreview("")
+    setIsEditDialogOpen(false)
 
-      const response = await fetch(`/api/users/${selectedUser.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(selectedUser),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to update user")
-      }
-
-      const updatedUser = await response.json()
-
-      setUsers((prevUsers) => prevUsers.map((user) => (user.id === selectedUser.id ? { ...updatedUser } : user)))
-      setSelectedUser(null)
-      setProfileImage(null)
-      setProfileImagePreview("")
-      setIsEditDialogOpen(false)
-
-      toast({
-        title: "User updated",
-        description: `${updatedUser.name} has been updated successfully.`,
-      })
-    } catch (err) {
-      console.error("Error updating user:", err)
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "An error occurred while updating user",
-        variant: "destructive",
-      })
-    }
+    toast({
+      title: "User updated",
+      description: `${selectedUser.name} has been updated successfully.`,
+    })
   }
 
-  const handleDeleteUser = async () => {
+  const handleDeleteUser = () => {
     if (!selectedUser) return
 
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        throw new Error("Authentication token not found")
-      }
+    setUsers((prevUsers) => prevUsers.filter((user) => user.id !== selectedUser.id))
+    setSelectedUser(null)
+    setIsDeleteDialogOpen(false)
 
-      const response = await fetch(`/api/users/${selectedUser.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to delete user")
-      }
-
-      setUsers((prevUsers) => prevUsers.filter((user) => user.id !== selectedUser.id))
-      setSelectedUser(null)
-      setIsDeleteDialogOpen(false)
-
-      toast({
-        title: "User deleted",
-        description: `${selectedUser.name} has been deleted successfully.`,
-      })
-    } catch (err) {
-      console.error("Error deleting user:", err)
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "An error occurred while deleting user",
-        variant: "destructive",
-      })
-    }
+    toast({
+      title: "User deleted",
+      description: `${selectedUser.name} has been deleted successfully.`,
+    })
   }
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -261,7 +176,7 @@ export function UsersList() {
     }
   }
 
-  const togglePasswordVisibility = (userId: number) => {
+  const togglePasswordVisibility = (userId: string) => {
     if (visiblePasswordIds.includes(userId)) {
       setVisiblePasswordIds(visiblePasswordIds.filter((id) => id !== userId))
     } else {
@@ -269,7 +184,7 @@ export function UsersList() {
     }
   }
 
-  const copyToClipboard = (text: string, userId: number) => {
+  const copyToClipboard = (text: string, userId: string) => {
     navigator.clipboard.writeText(text).then(
       () => {
         setCopiedId(userId)
@@ -300,30 +215,6 @@ export function UsersList() {
       user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
       user.username.toLowerCase().includes(searchQuery.toLowerCase()),
   )
-
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-4 text-gray-500">Loading users...</p>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <Alert variant="destructive" className="mb-6">
-        <AlertDescription>
-          Error loading users: {error}
-          <div className="mt-2">
-            <Button onClick={fetchUsers} variant="outline" size="sm">
-              Try Again
-            </Button>
-          </div>
-        </AlertDescription>
-      </Alert>
-    )
-  }
 
   return (
     <div className="space-y-4">
@@ -512,45 +403,43 @@ export function UsersList() {
                     <span className="text-gray-500">Password:</span>{" "}
                     <div className="inline-flex items-center space-x-1">
                       <span className="font-mono">
-                        {visiblePasswordIds.includes(user.id) && user.password ? user.password : "********"}
+                        {visiblePasswordIds.includes(user.id)
+                          ? user.password
+                          : user.hashedPassword || hashPassword(user.password)}
                       </span>
-                      {user.password && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={() => togglePasswordVisibility(user.id)}
-                          >
-                            {visiblePasswordIds.includes(user.id) ? (
-                              <EyeOff className="h-3 w-3" />
-                            ) : (
-                              <Eye className="h-3 w-3" />
-                            )}
-                            <span className="sr-only">
-                              {visiblePasswordIds.includes(user.id) ? "Hide password" : "Show password"}
-                            </span>
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-6 w-6 p-0"
-                            onClick={() => user.password && copyToClipboard(user.password, user.id)}
-                          >
-                            {copiedId === user.id ? (
-                              <Check className="h-3 w-3 text-green-500" />
-                            ) : (
-                              <Copy className="h-3 w-3" />
-                            )}
-                            <span className="sr-only">Copy password</span>
-                          </Button>
-                        </>
-                      )}
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => togglePasswordVisibility(user.id)}
+                      >
+                        {visiblePasswordIds.includes(user.id) ? (
+                          <EyeOff className="h-3 w-3" />
+                        ) : (
+                          <Eye className="h-3 w-3" />
+                        )}
+                        <span className="sr-only">
+                          {visiblePasswordIds.includes(user.id) ? "Hide password" : "Show password"}
+                        </span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => copyToClipboard(user.password, user.id)}
+                      >
+                        {copiedId === user.id ? (
+                          <Check className="h-3 w-3 text-green-500" />
+                        ) : (
+                          <Copy className="h-3 w-3" />
+                        )}
+                        <span className="sr-only">Copy password</span>
+                      </Button>
                     </div>
                   </div>
                   {user.createdAt && (
                     <div>
-                      <span className="text-gray-500">Created:</span> {new Date(user.createdAt).toLocaleDateString()}
+                      <span className="text-gray-500">Created:</span> {user.createdAt}
                     </div>
                   )}
                 </div>
@@ -592,6 +481,7 @@ export function UsersList() {
                   <TableHead>Username</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Phone</TableHead>
+                  <TableHead>Password</TableHead>
                   <TableHead>Role</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -616,6 +506,43 @@ export function UsersList() {
                     <TableCell>{user.email}</TableCell>
                     <TableCell>{user.phone || "-"}</TableCell>
                     <TableCell>
+                      <div className="flex items-center space-x-2">
+                        <span className="font-mono">
+                          {visiblePasswordIds.includes(user.id)
+                            ? user.password
+                            : user.hashedPassword || hashPassword(user.password)}
+                        </span>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => togglePasswordVisibility(user.id)}
+                        >
+                          {visiblePasswordIds.includes(user.id) ? (
+                            <EyeOff className="h-4 w-4" />
+                          ) : (
+                            <Eye className="h-4 w-4" />
+                          )}
+                          <span className="sr-only">
+                            {visiblePasswordIds.includes(user.id) ? "Hide password" : "Show password"}
+                          </span>
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          onClick={() => copyToClipboard(user.password, user.id)}
+                        >
+                          {copiedId === user.id ? (
+                            <Check className="h-4 w-4 text-green-500" />
+                          ) : (
+                            <Copy className="h-4 w-4" />
+                          )}
+                          <span className="sr-only">Copy password</span>
+                        </Button>
+                      </div>
+                    </TableCell>
+                    <TableCell>
                       <span
                         className={`inline-flex rounded-full px-2 py-1 text-xs font-semibold ${
                           user.role === "agent"
@@ -628,7 +555,7 @@ export function UsersList() {
                         {user.role}
                       </span>
                     </TableCell>
-                    <TableCell>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "-"}</TableCell>
+                    <TableCell>{user.createdAt || "-"}</TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
                         <Button
@@ -743,13 +670,14 @@ export function UsersList() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="edit-password">
-                  Password <span className="text-sm text-gray-500">(Leave blank to keep current password)</span>
+                  Password <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="edit-password"
                   type="text"
-                  value={selectedUser.password || ""}
+                  value={selectedUser.password}
                   onChange={(e) => setSelectedUser({ ...selectedUser, password: e.target.value })}
+                  required
                 />
               </div>
               <div className="space-y-2">

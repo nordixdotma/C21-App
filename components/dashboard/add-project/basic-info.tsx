@@ -14,12 +14,11 @@ import { AlertCircle } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 
 interface User {
-  user_id: string
-  first_name: string
-  last_name: string
+  id: string
+  name: string
   email: string
   role: string
-  profile_image?: string
+  image?: string
   phone?: string
 }
 
@@ -34,37 +33,26 @@ export function BasicInfo({ data, updateData, onNext }: BasicInfoProps) {
   const [clients, setClients] = useState<User[]>([])
   const [agents, setAgents] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(true)
+  // Add a new state for project ID validation
+  const [idError, setIdError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        setIsLoading(true)
+    // Load users from localStorage
+    const storedUsers = localStorage.getItem("users")
+    if (storedUsers) {
+      const allUsers = JSON.parse(storedUsers)
 
-        // Fetch clients
-        const clientsResponse = await fetch("/api/users?role=client")
-        if (!clientsResponse.ok) {
-          throw new Error("Failed to fetch clients")
-        }
-        const clientsData = await clientsResponse.json()
-        setClients(clientsData)
-
-        // Fetch agents
-        const agentsResponse = await fetch("/api/users?role=agent")
-        if (!agentsResponse.ok) {
-          throw new Error("Failed to fetch agents")
-        }
-        const agentsData = await agentsResponse.json()
-        setAgents(agentsData)
-      } catch (error) {
-        console.error("Error fetching users:", error)
-      } finally {
-        setIsLoading(false)
-      }
+      // Filter users by role
+      setClients(allUsers.filter((user: User) => user.role === "client"))
+      setAgents(allUsers.filter((user: User) => user.role === "agent"))
+    } else {
+      setClients([])
+      setAgents([])
     }
-
-    fetchUsers()
+    setIsLoading(false)
   }, [])
 
+  // Modify the handleSubmit function to remove the project ID validation:
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -117,12 +105,7 @@ export function BasicInfo({ data, updateData, onNext }: BasicInfoProps) {
           <Label htmlFor="owner" className="">
             Property Owner <span className="text-red-500">*</span>
           </Label>
-          {isLoading ? (
-            <div className="flex items-center space-x-2 mt-2">
-              <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-primary animate-spin"></div>
-              <span className="text-sm text-gray-500">Loading clients...</span>
-            </div>
-          ) : clients.length === 0 ? (
+          {clients.length === 0 ? (
             <Alert variant="destructive" className="mt-2">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
@@ -136,8 +119,8 @@ export function BasicInfo({ data, updateData, onNext }: BasicInfoProps) {
               </SelectTrigger>
               <SelectContent className="border border-gray-300">
                 {clients.map((client) => (
-                  <SelectItem key={client.user_id} value={client.user_id.toString()}>
-                    {client.first_name} {client.last_name} ({client.email})
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.name} ({client.email})
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -149,12 +132,7 @@ export function BasicInfo({ data, updateData, onNext }: BasicInfoProps) {
           <Label htmlFor="agents" className="">
             Assign Agents <span className="text-red-500">*</span>
           </Label>
-          {isLoading ? (
-            <div className="flex items-center space-x-2 mt-2">
-              <div className="h-4 w-4 rounded-full border-2 border-t-transparent border-primary animate-spin"></div>
-              <span className="text-sm text-gray-500">Loading agents...</span>
-            </div>
-          ) : agents.length === 0 ? (
+          {agents.length === 0 ? (
             <Alert variant="destructive" className="mt-2">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
@@ -164,32 +142,30 @@ export function BasicInfo({ data, updateData, onNext }: BasicInfoProps) {
           ) : (
             <div className="space-y-3 mt-2 max-h-60 overflow-y-auto border border-gray-300 rounded-md p-3">
               {agents.map((agent) => (
-                <div key={agent.user_id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md">
+                <div key={agent.id} className="flex items-center space-x-3 p-2 hover:bg-gray-50 rounded-md">
                   <input
                     type="checkbox"
-                    id={`agent-${agent.user_id}`}
-                    checked={data.assignedAgents?.includes(agent.user_id.toString())}
+                    id={`agent-${agent.id}`}
+                    checked={data.assignedAgents?.includes(agent.id)}
                     onChange={(e) => {
                       const currentAgents = data.assignedAgents || []
                       const updatedAgents = e.target.checked
-                        ? [...currentAgents, agent.user_id.toString()]
-                        : currentAgents.filter((id: string) => id !== agent.user_id.toString())
+                        ? [...currentAgents, agent.id]
+                        : currentAgents.filter((id: string) => id !== agent.id)
                       updateData({ assignedAgents: updatedAgents })
                     }}
                     className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                   />
-                  <label htmlFor={`agent-${agent.user_id}`} className="flex flex-1 cursor-pointer items-center">
+                  <label htmlFor={`agent-${agent.id}`} className="flex flex-1 cursor-pointer items-center">
                     <div className="relative h-10 w-10 overflow-hidden rounded-full mr-3">
                       <img
-                        src={agent.profile_image || "/placeholder.svg?height=40&width=40"}
-                        alt={`${agent.first_name} ${agent.last_name}`}
+                        src={agent.image || "/placeholder.svg?height=40&width=40"}
+                        alt={agent.name}
                         className="h-full w-full object-cover"
                       />
                     </div>
                     <div>
-                      <p className="font-medium">
-                        {agent.first_name} {agent.last_name}
-                      </p>
+                      <p className="font-medium">{agent.name}</p>
                       <p className="text-sm text-gray-500">{agent.email}</p>
                     </div>
                   </label>
@@ -282,6 +258,22 @@ export function BasicInfo({ data, updateData, onNext }: BasicInfoProps) {
             required
             className="border border-gray-300"
           />
+        </div>
+
+        {/* Add a new field for Project ID after the price field */}
+        <div>
+          <Label htmlFor="projectId" className="">
+            Project ID
+          </Label>
+          <div className="flex items-center">
+            <Input
+              id="projectId"
+              value={data.projectId || "Will be auto-generated"}
+              disabled
+              className="border border-gray-300 bg-gray-100 text-gray-500"
+            />
+            {data.projectId && <p className="ml-2 text-xs text-gray-500">(Auto-generated)</p>}
+          </div>
         </div>
       </div>
 

@@ -36,42 +36,28 @@ export function ClientReports() {
   const [filterImpression, setFilterImpression] = useState("")
   const [selectedReport, setSelectedReport] = useState<Report | null>(null)
   const [isDialogOpen, setIsDialogOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
+  const [clientId, setClientId] = useState("")
 
   useEffect(() => {
-    const fetchReports = async () => {
-      try {
-        const token = localStorage.getItem("token")
-        if (!token) return
+    // Get client ID from localStorage
+    const userId = localStorage.getItem("userId")
+    setClientId(userId || "")
 
-        const response = await fetch("/api/reports", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+    // Load reports from localStorage
+    const storedReports = JSON.parse(localStorage.getItem("agentReports") || "[]") as Report[]
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch reports")
-        }
+    // Filter reports for current client
+    const clientReports = storedReports.filter((report) => report.clientId === userId)
 
-        const data = await response.json()
-        setReports(data)
-        setFilteredReports(data)
-      } catch (error) {
-        console.error("Error fetching reports:", error)
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    fetchReports()
+    setReports(clientReports)
+    setFilteredReports(clientReports)
   }, [])
 
   useEffect(() => {
     let result = reports
 
     // Apply impression filter
-    if (filterImpression && filterImpression !== "all") {
+    if (filterImpression) {
       result = result.filter((report) => report.impression === filterImpression)
     }
 
@@ -116,14 +102,6 @@ export function ClientReports() {
           </Badge>
         )
     }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-10">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    )
   }
 
   return (

@@ -12,63 +12,52 @@ export function ClientProperties() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        const token = localStorage.getItem("token")
-        if (!token) return
+    const userId = localStorage.getItem("userId")
+    const savedProjects = localStorage.getItem("projects")
 
-        const response = await fetch("/api/projects/client", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
+    if (savedProjects && userId) {
+      const allProjects = JSON.parse(savedProjects)
+      // Filter projects where the current user is the owner
+      const userProperties = allProjects.filter((project) => project.ownerId === userId)
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch properties")
+      // Generate realistic metrics for each property
+      const formattedProperties = userProperties.map((project) => {
+        // Generate view count based on when the property was added (assume newer properties have fewer views)
+        const daysSinceAdded = project.createdAt
+          ? Math.floor((new Date() - new Date(project.createdAt)) / (1000 * 60 * 60 * 24))
+          : Math.floor(Math.random() * 30) + 1
+
+        // More days = more views, with some randomness
+        const views = Math.floor(daysSinceAdded * 5 + Math.random() * 20)
+
+        // Contact clicks are typically 10-20% of views
+        const contactClicks = Math.floor(views * (0.1 + Math.random() * 0.1))
+
+        // Generate a realistic "last visit" timestamp
+        const lastVisitDays = Math.floor(Math.random() * 14) + 1
+        const lastVisit =
+          lastVisitDays === 1
+            ? "1 day ago"
+            : lastVisitDays <= 7
+              ? `${lastVisitDays} days ago`
+              : `${Math.floor(lastVisitDays / 7)} week${Math.floor(lastVisitDays / 7) > 1 ? "s" : ""} ago`
+
+        return {
+          id: project.id,
+          name: project.name || project.title,
+          image: project.image || project.images?.[0] || "/placeholder.svg?height=300&width=400",
+          location: project.location || `${project.address || ""}, ${project.city || ""}`,
+          price: `${project.price || 0} MAD`,
+          status: project.status === "available" ? "active" : "pending",
+          views,
+          contactClicks,
+          lastVisit,
         }
+      })
 
-        const data = await response.json()
-
-        // Format properties with metrics
-        const formattedProperties = data.map((project) => {
-          // Calculate days since added
-          const daysSinceAdded = project.createdAt
-            ? Math.floor((new Date() - new Date(project.createdAt)) / (1000 * 60 * 60 * 24))
-            : Math.floor(Math.random() * 30) + 1
-
-          // Generate view metrics
-          const views = Math.floor(daysSinceAdded * 5 + Math.random() * 20)
-          const contactClicks = Math.floor(views * (0.1 + Math.random() * 0.1))
-          const lastVisitDays = Math.floor(Math.random() * 14) + 1
-          const lastVisit =
-            lastVisitDays === 1
-              ? "1 day ago"
-              : lastVisitDays <= 7
-                ? `${lastVisitDays} days ago`
-                : `${Math.floor(lastVisitDays / 7)} week${Math.floor(lastVisitDays / 7) > 1 ? "s" : ""} ago`
-
-          return {
-            id: project.id,
-            name: project.name,
-            image: project.featuredImage || "/placeholder.svg?height=300&width=400",
-            location: project.address ? `${project.address}, ${project.city || ""}` : project.location,
-            price: `${project.price || 0} MAD`,
-            status: project.status === "available" ? "active" : "pending",
-            views,
-            contactClicks,
-            lastVisit,
-          }
-        })
-
-        setClientProperties(formattedProperties)
-      } catch (error) {
-        console.error("Error fetching properties:", error)
-      } finally {
-        setIsLoading(false)
-      }
+      setClientProperties(formattedProperties)
     }
-
-    fetchProperties()
+    setIsLoading(false)
   }, [])
 
   if (isLoading) {

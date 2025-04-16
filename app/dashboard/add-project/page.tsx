@@ -18,9 +18,22 @@ const steps = [
   { id: 5, name: "Location" },
 ]
 
+// Add this function to generate a unique project ID
+const generateProjectId = () => {
+  // Get current date components
+  const now = new Date()
+  const year = now.getFullYear().toString().slice(-2) // Last 2 digits of year
+  const month = (now.getMonth() + 1).toString().padStart(2, "0")
+
+  // Get random alphanumeric string
+  const randomPart = Math.random().toString(36).substring(2, 6).toUpperCase()
+
+  // Combine to create a project ID like "23-05-X7F2"
+  return `${year}-${month}-${randomPart}`
+}
+
 export default function AddProjectPage() {
   const [currentStep, setCurrentStep] = useState(1)
-  const [isSubmitting, setIsSubmitting] = useState(false)
   const [formData, setFormData] = useState({
     // Basic Info
     title: "",
@@ -31,6 +44,7 @@ export default function AddProjectPage() {
     price: "",
     ownerId: "", // Added owner ID field
     assignedAgents: [] as string[], // Added assigned agents field
+    projectId: "",
 
     // Media
     images: [] as File[],
@@ -47,6 +61,7 @@ export default function AddProjectPage() {
     landAreaPostfix: "sqft",
     garages: "",
     garageSize: "",
+    propertyId: "",
     yearBuilt: "",
 
     // Features
@@ -56,8 +71,6 @@ export default function AddProjectPage() {
     address: "",
     city: "",
     area: "",
-    state: "",
-    country: "Morocco",
     zipCode: "",
     latitude: "",
     longitude: "",
@@ -92,7 +105,7 @@ export default function AddProjectPage() {
     setCurrentStep((prev) => Math.max(prev - 1, 1))
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     if (!formData.title || !formData.price) {
       toast({
         title: "Missing required fields",
@@ -102,47 +115,58 @@ export default function AddProjectPage() {
       return
     }
 
+    // Generate a unique ID
+    const projectId = Date.now().toString()
+
+    const newProject = {
+      ...formData,
+      id: Date.now().toString(),
+      projectId: generateProjectId(), // Add auto-generated project ID
+      createdAt: new Date().toISOString(),
+      // ... rest of the code
+    }
+
+    // Create the project object
+    const project = {
+      id: projectId,
+      projectId: formData.projectId || projectId, // Use the user-provided project ID or generate one
+      name: formData.title,
+      title: formData.title,
+      description: formData.description,
+      location: `${formData.address || ""}, ${formData.city || ""}`.trim(),
+      price: `${formData.price} MAD`,
+      priceValue: formData.price,
+      priceType: formData.priceType || "sale",
+      type: formData.type || "apartment",
+      status: formData.status || "available",
+      bedrooms: formData.bedrooms || "1",
+      bathrooms: formData.bathrooms || "1",
+      area: formData.areaSize || "100",
+      areaSize: formData.areaSize || "100",
+      sizePostfix: formData.sizePostfix || "sqft",
+      features: formData.features || [],
+      images: formData.imageUrls.length > 0 ? formData.imageUrls : ["/placeholder.svg?height=600&width=800"],
+      image: formData.imageUrls.length > 0 ? formData.imageUrls[0] : "/placeholder.svg?height=600&width=800",
+      date: new Date().toISOString(),
+      ownerId: formData.ownerId,
+      assignedAgents: formData.assignedAgents || [],
+      address: formData.address || "",
+      city: formData.city || "",
+      zipCode: formData.zipCode || "",
+      latitude: formData.latitude || "",
+      longitude: formData.longitude || "",
+      // Add other fields as needed
+    }
+
+    // Save to localStorage
     try {
-      setIsSubmitting(true)
+      const savedProjects = localStorage.getItem("projects")
+      const projects = savedProjects ? JSON.parse(savedProjects) : []
 
-      // Convert property type and status to match database enum values
-      const propertyTypeMap: Record<string, string> = {
-        apartment: "Apartment",
-        house: "House",
-        villa: "Villa",
-        commercial: "Commercial",
-        land: "Land",
-        office: "Commercial",
-        industrial: "Commercial",
-      }
+      // Add the new project
+      projects.push(project)
 
-      const statusMap: Record<string, string> = {
-        available: "For Sale",
-        sold: "Sold",
-        rented: "Rented",
-      }
-
-      // Prepare data for API
-      const projectData = {
-        ...formData,
-        type: propertyTypeMap[formData.type] || "Apartment",
-        status: formData.priceType === "rent" ? "For Rent" : statusMap[formData.status] || "For Sale",
-      }
-
-      const response = await fetch("/api/projects", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(projectData),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to create project")
-      }
-
-      const result = await response.json()
+      localStorage.setItem("projects", JSON.stringify(projects))
 
       toast({
         title: "Success",
@@ -151,15 +175,13 @@ export default function AddProjectPage() {
 
       // Redirect to the projects list
       router.push("/dashboard")
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error saving project:", error)
       toast({
         title: "Error",
-        description: error.message || "There was an error saving the property. Please try again.",
+        description: "There was an error saving the property. Please try again.",
         variant: "destructive",
       })
-    } finally {
-      setIsSubmitting(false)
     }
   }
 
@@ -199,13 +221,7 @@ export default function AddProjectPage() {
             <PropertyFeatures data={formData} updateData={updateFormData} onNext={handleNext} onBack={handleBack} />
           )}
           {currentStep === 5 && (
-            <PropertyLocation
-              data={formData}
-              updateData={updateFormData}
-              onSubmit={handleSubmit}
-              onBack={handleBack}
-              isSubmitting={isSubmitting}
-            />
+            <PropertyLocation data={formData} updateData={updateFormData} onSubmit={handleSubmit} onBack={handleBack} />
           )}
         </div>
       </div>

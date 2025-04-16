@@ -2,88 +2,82 @@
 
 import { useState, useEffect } from "react"
 import { ProjectCard } from "@/components/shared/project-card"
-import { Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Info } from "lucide-react"
+import { Skeleton } from "@/components/ui/skeleton"
 import type { Project } from "@/types"
 
 export function NewProjectsGrid() {
   const [projects, setProjects] = useState<Project[]>([])
   const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [visibleProjects, setVisibleProjects] = useState(8)
+  const [visibleCount, setVisibleCount] = useState(6)
 
   useEffect(() => {
-    const fetchNewProjects = async () => {
-      try {
-        setIsLoading(true)
-        const response = await fetch("/api/projects?type=new_project&limit=24")
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch new projects")
-        }
-
-        const data = await response.json()
-        setProjects(data.projects || [])
-      } catch (err) {
-        console.error("Error fetching new projects:", err)
-        setError("Failed to load new projects")
-      } finally {
-        setIsLoading(false)
-      }
+    const savedProjects = localStorage.getItem("projects")
+    if (savedProjects) {
+      const allProjects = JSON.parse(savedProjects)
+      // Filter to only show new development projects
+      const newProjects = allProjects.filter(
+        (project) => project.priceType === "new_project" && project.status === "available",
+      )
+      setProjects(newProjects)
     }
-
-    fetchNewProjects()
+    setIsLoading(false)
   }, [])
 
-  const loadMore = () => {
-    setVisibleProjects((prev) => Math.min(prev + 8, projects.length))
+  const handleLoadMore = () => {
+    setVisibleCount((prev) => prev + 6)
   }
 
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-20">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-          <p className="text-gray-500 text-lg">Loading new projects...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="flex justify-center items-center py-20">
-        <div className="text-center">
-          <p className="text-gray-500 text-lg">{error}</p>
-          <Button variant="outline" className="mt-4" onClick={() => window.location.reload()}>
-            Try Again
-          </Button>
-        </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="rounded-lg overflow-hidden">
+            <Skeleton className="h-48 w-full" />
+            <div className="p-4 space-y-2">
+              <Skeleton className="h-6 w-3/4" />
+              <Skeleton className="h-4 w-1/2" />
+              <div className="flex gap-2 pt-2">
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-16" />
+                <Skeleton className="h-4 w-16" />
+              </div>
+              <Skeleton className="h-6 w-1/3 mt-2" />
+            </div>
+          </div>
+        ))}
       </div>
     )
   }
 
   if (projects.length === 0) {
     return (
-      <div className="text-center py-20">
-        <h3 className="text-xl font-semibold mb-2">No New Projects Available</h3>
-        <p className="text-gray-500">Check back soon for new property listings.</p>
+      <div className="text-center py-12 bg-gray-50 rounded-lg">
+        <Info className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+        <h3 className="text-lg font-medium text-gray-700 mb-1">No new development projects found</h3>
+        <p className="text-gray-500">
+          No new development projects are currently available. Check back soon for new listings.
+        </p>
       </div>
     )
   }
 
+  const visibleProjects = projects.slice(0, visibleCount)
+  const hasMore = visibleCount < projects.length
+
   return (
-    <div className="space-y-10">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 md:gap-8">
-        {projects.slice(0, visibleProjects).map((project) => (
-          <ProjectCard key={project.id} project={project} layout="vertical" />
+    <div className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {visibleProjects.map((project) => (
+          <ProjectCard key={project.id} project={project} layout="vertical" showBadge={true} />
         ))}
       </div>
 
-      {visibleProjects < projects.length && (
-        <div className="flex justify-center mt-10">
-          <Button onClick={loadMore} className="px-8">
-            Load More
+      {hasMore && (
+        <div className="flex justify-center mt-8">
+          <Button variant="outline" onClick={handleLoadMore}>
+            Load More Projects
           </Button>
         </div>
       )}

@@ -10,7 +10,6 @@ import { ClientAppointments } from "@/components/client-dashboard/appointments"
 import { ClientReports } from "@/components/client-dashboard/reports"
 import { Loader2 } from "lucide-react"
 import { Sheet, SheetContent } from "@/components/ui/sheet"
-import { verifyToken } from "@/lib/auth"
 
 export default function ClientDashboardPage() {
   const router = useRouter()
@@ -34,41 +33,31 @@ export default function ClientDashboardPage() {
   }, [searchParams])
 
   useEffect(() => {
-    const token = localStorage.getItem("token")
+    const isAuthenticated = localStorage.getItem("isAuthenticated")
+    const userRole = localStorage.getItem("userRole")
+    const username = localStorage.getItem("username")
+    const userId = localStorage.getItem("userId")
+    const userEmail = localStorage.getItem("userEmail")
 
-    if (!token) {
+    if (!isAuthenticated) {
       router.push("/client-login")
       return
     }
 
-    try {
-      const user = verifyToken(token)
-
-      if (!user) {
-        localStorage.removeItem("token")
-        router.push("/client-login")
-        return
-      }
-
-      if (user.role !== "client") {
-        router.push("/agent-dashboard")
-        return
-      }
-
-      setUserData({
-        id: user.id,
-        name: user.name || user.username,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-      })
-
-      setTimeout(() => setIsLoading(false), 500)
-    } catch (error) {
-      console.error("Error verifying token:", error)
-      localStorage.removeItem("token")
-      router.push("/client-login")
+    if (userRole === "agent") {
+      router.push("/agent-dashboard")
+      return
     }
+
+    setUserData({
+      id: userId || "",
+      name: username || "",
+      username: username || "",
+      email: userEmail || "",
+      role: userRole || "client",
+    })
+
+    setTimeout(() => setIsLoading(false), 500)
   }, [router])
 
   if (isLoading) {

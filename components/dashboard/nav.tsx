@@ -16,8 +16,8 @@ export function DashboardNav({ activeSection = "overview", isMobile = false }: D
   const router = useRouter()
 
   const handleLogout = () => {
-    localStorage.removeItem("token")
-    localStorage.removeItem("user")
+    localStorage.removeItem("isAuthenticated")
+    localStorage.removeItem("userRole")
     router.push("/login")
   }
 

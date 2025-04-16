@@ -19,7 +19,7 @@ const steps = [
   { id: 5, name: "Location" },
 ]
 
-export default function EditProjectPage({ params }: { params: { id: string } }) {
+export default function EditProjectPage({ params }) {
   const [currentStep, setCurrentStep] = useState(1)
   const [isLoading, setIsLoading] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -31,9 +31,9 @@ export default function EditProjectPage({ params }: { params: { id: string } }) 
     priceType: "sale",
     price: "",
     ownerId: "",
-    assignedAgents: [] as string[],
-    images: [] as File[],
-    imageUrls: [] as string[],
+    assignedAgents: [],
+    images: [],
+    imageUrls: [],
     videoUrl: "",
     bedrooms: "",
     rooms: "",
@@ -44,13 +44,12 @@ export default function EditProjectPage({ params }: { params: { id: string } }) 
     landAreaPostfix: "sqft",
     garages: "",
     garageSize: "",
+    propertyId: "",
     yearBuilt: "",
-    features: [] as string[],
+    features: [],
     address: "",
     city: "",
     area: "",
-    state: "",
-    country: "Morocco",
     zipCode: "",
     latitude: "",
     longitude: "",
@@ -60,69 +59,71 @@ export default function EditProjectPage({ params }: { params: { id: string } }) 
 
   // Fetch project data
   useEffect(() => {
-    const fetchProject = async () => {
+    // Load project data from localStorage
+    const loadProject = () => {
       try {
-        setIsLoading(true)
-        const response = await fetch(`/api/projects/${params.id}`)
+        const savedProjects = localStorage.getItem("projects")
+        if (savedProjects) {
+          const projects = JSON.parse(savedProjects)
+          const projectId = params.id.toString()
+          const project = projects.find(
+            (p) => p.id?.toString() === projectId || (p.projectId && p.projectId.toString() === projectId),
+          )
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch project")
+          if (project) {
+            setFormData({
+              id: project.id,
+              projectId: project.projectId || project.id, // Use projectId if available, otherwise use id
+              title: project.title || project.name || "",
+              description: project.description || "",
+              price: project.priceValue || project.price?.replace(/[^0-9.-]+/g, "") || "",
+              priceType: project.priceType || "sale",
+              type: project.type || "apartment",
+              status: project.status || "available",
+              ownerId: project.ownerId || "",
+              assignedAgents: project.assignedAgents || [],
+              images: [],
+              imageUrls: project.imageUrls || project.images || [project.image].filter(Boolean) || [],
+              videoUrl: project.videoUrl || "",
+              bedrooms: project.bedrooms || project.details?.bedrooms || "",
+              rooms: project.rooms || project.details?.rooms || "",
+              bathrooms: project.bathrooms || project.details?.bathrooms || "",
+              areaSize: project.areaSize || project.details?.areaSize || "",
+              sizePostfix: project.sizePostfix || "sqft",
+              landArea: project.landArea || "",
+              landAreaPostfix: project.landAreaPostfix || "sqft",
+              garages: project.garages || "",
+              garageSize: project.garageSize || "",
+              yearBuilt: project.yearBuilt || "",
+              features: project.features || [],
+              address: project.address || "",
+              city: project.city || "",
+              area: project.area || "",
+              zipCode: project.zipCode || "",
+              latitude: project.latitude || "",
+              longitude: project.longitude || "",
+              location: project.location || "",
+            })
+            return true
+          }
         }
-
-        const project = await response.json()
-
-        // Map database fields to form fields
-        setFormData({
-          title: project.title || "",
-          description: project.description || "",
-          price: project.price?.toString() || "",
-          priceType: project.status === "For Rent" ? "rent" : "sale",
-          type: project.property_type?.toLowerCase() || "apartment",
-          status:
-            project.status === "For Sale"
-              ? "available"
-              : project.status === "For Rent"
-                ? "available"
-                : project.status?.toLowerCase() || "available",
-          ownerId: project.owner_id?.toString() || "",
-          assignedAgents: project.assignedAgents?.map((id: number) => id.toString()) || [],
-          images: [],
-          imageUrls: project.images || [],
-          videoUrl: project.youtube_url || "",
-          bedrooms: project.bedrooms?.toString() || "",
-          rooms: project.rooms?.toString() || "",
-          bathrooms: project.bathrooms?.toString() || "",
-          areaSize: project.area?.toString() || "",
-          sizePostfix: project.area_unit || "sqft",
-          landArea: "",
-          landAreaPostfix: "sqft",
-          garages: "",
-          garageSize: "",
-          yearBuilt: project.year_built?.toString() || "",
-          features: project.features || [],
-          address: project.address || "",
-          city: project.city || "",
-          area: project.neighborhood || "",
-          state: project.state || "",
-          country: project.country || "Morocco",
-          zipCode: project.zip_code || "",
-          latitude: project.latitude?.toString() || "",
-          longitude: project.longitude?.toString() || "",
-        })
-
-        setIsLoading(false)
+        return false
       } catch (error) {
-        console.error("Error fetching project:", error)
-        toast({
-          title: "Error",
-          description: "Failed to load project. Please try again.",
-          variant: "destructive",
-        })
-        router.push("/dashboard")
+        console.error("Error loading project:", error)
+        return false
       }
     }
 
-    fetchProject()
+    if (!loadProject()) {
+      toast({
+        title: "Error",
+        description: "Project not found",
+        variant: "destructive",
+      })
+      router.push("/dashboard")
+    } else {
+      setIsLoading(false)
+    }
   }, [params.id, router])
 
   const handleNext = () => {
@@ -171,67 +172,91 @@ export default function EditProjectPage({ params }: { params: { id: string } }) 
     setCurrentStep((prev) => Math.max(prev - 1, 1))
   }
 
-  const handleSubmit = async () => {
+  const handleSubmit = () => {
     try {
       setIsSubmitting(true)
 
-      // Convert property type and status to match database enum values
-      const propertyTypeMap: Record<string, string> = {
-        apartment: "Apartment",
-        house: "House",
-        villa: "Villa",
-        commercial: "Commercial",
-        land: "Land",
-        office: "Commercial",
-        industrial: "Commercial",
+      // Get existing projects
+      const projectsStr = localStorage.getItem("projects")
+      if (!projectsStr) {
+        throw new Error("No projects found in storage")
       }
 
-      const statusMap: Record<string, string> = {
-        available: "For Sale",
-        sold: "Sold",
-        rented: "Rented",
+      const projects = JSON.parse(projectsStr)
+      const projectIndex = projects.findIndex(
+        (p) =>
+          p.id?.toString() === params.id.toString() || (p.projectId && p.projectId.toString() === params.id.toString()),
+      )
+
+      if (projectIndex === -1) {
+        throw new Error("Project not found")
       }
 
-      // Prepare data for API
-      const projectData = {
-        ...formData,
-        type: propertyTypeMap[formData.type] || "Apartment",
-        status: formData.priceType === "rent" ? "For Rent" : statusMap[formData.status] || "For Sale",
+      // Update the project
+      const updatedProject = {
+        ...projects[projectIndex],
+        name: formData.title,
+        title: formData.title,
+        description: formData.description,
+        type: formData.type,
+        status: formData.status,
+        priceType: formData.priceType,
+        price: formData.price,
+        priceValue: formData.price,
+        ownerId: formData.ownerId,
+        assignedAgents: formData.assignedAgents,
+        image: formData.imageUrls[0] || projects[projectIndex].image,
+        images: formData.imageUrls,
+        imageUrls: formData.imageUrls,
+        videoUrl: formData.videoUrl,
+        bedrooms: formData.bedrooms,
+        bathrooms: formData.bathrooms,
+        rooms: formData.rooms,
+        areaSize: formData.areaSize,
+        sizePostfix: formData.sizePostfix,
+        landArea: formData.landArea,
+        landAreaPostfix: formData.landAreaPostfix,
+        garages: formData.garages,
+        garageSize: formData.garageSize,
+        yearBuilt: formData.yearBuilt,
+        features: formData.features,
+        location: `${formData.address}, ${formData.city}`,
+        address: formData.address,
+        city: formData.city,
+        area: formData.area,
+        zipCode: formData.zipCode,
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        lastUpdated: new Date().toISOString().split("T")[0],
+        // Ensure we keep the original ID and projectId
+        id: projects[projectIndex].id,
+        projectId: projects[projectIndex].projectId || projects[projectIndex].id,
       }
 
-      const response = await fetch(`/api/projects/${params.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(projectData),
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to update project")
-      }
+      projects[projectIndex] = updatedProject
+      localStorage.setItem("projects", JSON.stringify(projects))
 
       toast({
-        title: "Success",
-        description: "Property updated successfully.",
+        title: "Project updated",
+        description: `${formData.title} has been updated successfully.`,
       })
 
-      // Redirect to the projects list
-      router.push("/dashboard")
-    } catch (error: any) {
+      // Add a small delay before redirecting to ensure localStorage is updated
+      setTimeout(() => {
+        router.push("/dashboard")
+      }, 1000)
+    } catch (error) {
       console.error("Error updating project:", error)
       toast({
         title: "Error",
-        description: error.message || "There was an error updating the property. Please try again.",
+        description: "Failed to update project: " + error.message,
         variant: "destructive",
       })
-    } finally {
       setIsSubmitting(false)
     }
   }
 
-  const updateFormData = (data: Partial<typeof formData>) => {
+  const updateFormData = (data) => {
     setFormData((prev) => ({ ...prev, ...data }))
   }
 

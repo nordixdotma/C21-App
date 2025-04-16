@@ -17,39 +17,33 @@ interface MediaUploadProps {
   onBack: () => void
 }
 
-// Add a function to convert File to base64 string
-const fileToBase64 = (file: File): Promise<string> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.readAsDataURL(file)
-    reader.onload = () => resolve(reader.result as string)
-    reader.onerror = (error) => reject(error)
-  })
-}
-
 export function MediaUpload({ data, updateData, onNext, onBack }: MediaUploadProps) {
   // Convert files to data URLs when files are added
   useEffect(() => {
     const convertFilesToDataURLs = async () => {
       if (data.images && data.images.length > 0) {
-        const promises = data.images.map((file: File) => fileToBase64(file))
+        const promises = data.images.map((file: File) => {
+          return new Promise<string>((resolve) => {
+            const reader = new FileReader()
+            reader.onload = (e) => {
+              if (e.target?.result) {
+                resolve(e.target.result as string)
+              }
+            }
+            reader.readAsDataURL(file)
+          })
+        })
+
         const dataURLs = await Promise.all(promises)
-
-        // Only add new URLs that don't already exist
-        const existingUrls = new Set(data.imageUrls)
-        const newUrls = dataURLs.filter((url) => !existingUrls.has(url))
-
-        if (newUrls.length > 0) {
-          updateData({ imageUrls: [...data.imageUrls, ...newUrls] })
-        }
+        updateData({ imageUrls: dataURLs })
       }
     }
 
-    // Only convert if we have new images
-    if (data.images.length > 0) {
+    // Only convert if we have new images that haven't been converted yet
+    if (data.images.length > data.imageUrls.length) {
       convertFilesToDataURLs()
     }
-  }, [data.images, data.imageUrls, updateData])
+  }, [data.images, data.imageUrls.length, updateData])
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -108,7 +102,7 @@ export function MediaUpload({ data, updateData, onNext, onBack }: MediaUploadPro
       <div className="space-y-4">
         <div>
           <Label>
-            Images ({data.imageUrls.length} / 50) <span className="text-red-500">*</span>
+            Images ({data.images.length} / 50) <span className="text-red-500">*</span>
           </Label>
           <div
             {...getRootProps()}

@@ -13,15 +13,26 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "@/hooks/use-toast"
 
-interface Client {
-  id: string
-  name: string
-}
+// Mock data for clients and properties
+const clientsData = [
+  { id: "1", name: "John Smith" },
+  { id: "2", name: "Fatima Zahra" },
+  { id: "3", name: "Mohammed Al Fasi" },
+  { id: "4", name: "Sarah Johnson" },
+]
 
-interface Property {
-  id: string
-  name: string
-  address: string
+const propertiesData = {
+  "1": [
+    { id: "101", name: "Hivernage Villa", address: "123 Hivernage, Marrakech" },
+    { id: "102", name: "Gueliz Apartment", address: "45 Avenue Mohammed V, Gueliz, Marrakech" },
+    { id: "103", name: "Palm Grove Villa", address: "78 Palm Grove, Marrakech" },
+  ],
+  "2": [{ id: "201", name: "Modern Apartment", address: "12 Rue Ibn Sina, Marrakech" }],
+  "3": [
+    { id: "301", name: "Luxury Villa", address: "56 Route de Fez, Marrakech" },
+    { id: "302", name: "City Center Apartment", address: "89 Rue El Mouahidine, Marrakech" },
+  ],
+  "4": [{ id: "401", name: "Garden Apartment", address: "34 Avenue Hassan II, Marrakech" }],
 }
 
 export function AgentReportCreator() {
@@ -36,79 +47,21 @@ export function AgentReportCreator() {
     feedback: "",
     notes: "",
   })
-  const [availableProperties, setAvailableProperties] = useState<Property[]>([])
-  const [clients, setClients] = useState<Client[]>([])
+  const [availableProperties, setAvailableProperties] = useState<any[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const fetchClients = async () => {
-      try {
-        const token = localStorage.getItem("token")
-        if (!token) return
-
-        const response = await fetch("/api/clients", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch clients")
-        }
-
-        const data = await response.json()
-        setClients(data)
-
-        // Check if clientId is in URL params
-        const clientId = searchParams.get("clientId")
-        if (clientId && data.some((client) => client.id === clientId)) {
-          setSelectedClient(clientId)
-          fetchClientProperties(clientId)
-        }
-      } catch (error) {
-        console.error("Error fetching clients:", error)
-      } finally {
-        setIsLoading(false)
-      }
+    const clientId = searchParams.get("clientId")
+    if (clientId && clientsData.some((client) => client.id === clientId)) {
+      setSelectedClient(clientId)
+      setAvailableProperties(propertiesData[clientId as keyof typeof propertiesData] || [])
     }
-
-    fetchClients()
   }, [searchParams])
-
-  const fetchClientProperties = async (clientId: string) => {
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) return
-
-      const response = await fetch(`/api/projects/client/${clientId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch properties")
-      }
-
-      const data = await response.json()
-
-      const formattedProperties = data.map((property) => ({
-        id: property.id,
-        name: property.name,
-        address: property.address ? `${property.address}, ${property.city || ""}` : property.location,
-      }))
-
-      setAvailableProperties(formattedProperties)
-    } catch (error) {
-      console.error("Error fetching properties:", error)
-    }
-  }
 
   const handleClientChange = (clientId: string) => {
     setSelectedClient(clientId)
     setSelectedProperty("")
-    fetchClientProperties(clientId)
+    setAvailableProperties(propertiesData[clientId as keyof typeof propertiesData] || [])
   }
 
   const handlePropertyChange = (propertyId: string) => {
@@ -124,7 +77,7 @@ export function AgentReportCreator() {
     setReportData((prev) => ({ ...prev, impression: value }))
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
     if (!selectedClient || !selectedProperty || !reportData.visitDate || !reportData.feedback) {
@@ -138,39 +91,41 @@ export function AgentReportCreator() {
 
     setIsSubmitting(true)
 
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        toast({
-          title: "Authentication error",
-          description: "Please log in again.",
-          variant: "destructive",
-        })
-        return
-      }
+    // Get existing reports or initialize empty array
+    const existingReports = JSON.parse(localStorage.getItem("agentReports") || "[]")
 
-      const response = await fetch("/api/reports", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          propertyId: selectedProperty,
-          clientId: selectedClient,
-          visitDate: reportData.visitDate,
-          visitorName: reportData.visitorName,
-          visitorContact: reportData.visitorContact,
-          impression: reportData.impression,
-          feedback: reportData.feedback,
-          notes: reportData.notes,
-        }),
-      })
+    // Get client and property details
+    const client = clientsData.find((c) => c.id === selectedClient)
+    const property = availableProperties.find((p) => p.id === selectedProperty)
 
-      if (!response.ok) {
-        throw new Error("Failed to submit report")
-      }
+    // Create new report
+    const newReport = {
+      id: Date.now().toString(),
+      date: new Date().toISOString(),
+      clientId: selectedClient,
+      clientName: client?.name || "Unknown Client",
+      propertyId: selectedProperty,
+      propertyName: property?.name || "Unknown Property",
+      propertyAddress: property?.address || "",
+      visitDate: reportData.visitDate,
+      visitorName: reportData.visitorName || "Not specified",
+      visitorContact: reportData.visitorContact || "Not provided",
+      impression: reportData.impression,
+      feedback: reportData.feedback,
+      notes: reportData.notes || "No additional notes",
+      agentId: localStorage.getItem("userId") || "unknown",
+      agentName: localStorage.getItem("username") || "Unknown Agent",
+      status: "submitted",
+    }
 
+    // Add new report to existing reports
+    existingReports.push(newReport)
+
+    // Save updated reports to localStorage
+    localStorage.setItem("agentReports", JSON.stringify(existingReports))
+
+    // Simulate API call delay
+    setTimeout(() => {
       toast({
         title: "Report submitted",
         description: "The property visit report has been successfully submitted.",
@@ -188,24 +143,9 @@ export function AgentReportCreator() {
       setSelectedClient("")
       setSelectedProperty("")
       setAvailableProperties([])
-    } catch (error) {
-      console.error("Error submitting report:", error)
-      toast({
-        title: "Submission failed",
-        description: "There was an error submitting the report. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmitting(false)
-    }
-  }
 
-  if (isLoading) {
-    return (
-      <div className="flex justify-center py-10">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
-      </div>
-    )
+      setIsSubmitting(false)
+    }, 1000)
   }
 
   return (
@@ -225,7 +165,7 @@ export function AgentReportCreator() {
                     <SelectValue placeholder="Select client" />
                   </SelectTrigger>
                   <SelectContent>
-                    {clients.map((client) => (
+                    {clientsData.map((client) => (
                       <SelectItem key={client.id} value={client.id}>
                         {client.name}
                       </SelectItem>

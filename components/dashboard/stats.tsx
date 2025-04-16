@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Users, Home, FileText, Activity, Loader2 } from "lucide-react"
+import { Users, Home, FileText, Activity } from "lucide-react"
 
 export function DashboardStats() {
   const [stats, setStats] = useState({
@@ -11,70 +11,50 @@ export function DashboardStats() {
     totalSubscribers: 0,
     totalViews: 0,
   })
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        setIsLoading(true)
-        const token = localStorage.getItem("token")
-
-        if (!token) {
-          throw new Error("Authentication token not found")
-        }
-
-        const response = await fetch("/api/dashboard/stats", {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })
-
-        if (!response.ok) {
-          const errorData = await response.json()
-          throw new Error(errorData.error || "Failed to fetch dashboard stats")
-        }
-
-        const data = await response.json()
-        setStats(data)
-      } catch (err) {
-        console.error("Error fetching dashboard stats:", err)
-        setError(err instanceof Error ? err.message : "An error occurred")
-      } finally {
-        setIsLoading(false)
-      }
+    // Get users data
+    const savedUsers = localStorage.getItem("users")
+    let userCount = 0
+    if (savedUsers) {
+      const users = JSON.parse(savedUsers)
+      userCount = users.length
     }
 
-    fetchStats()
+    // Get properties data
+    const savedProjects = localStorage.getItem("projects")
+    let projectCount = 0
+    if (savedProjects) {
+      const projects = JSON.parse(savedProjects)
+      projectCount = projects.length
+    }
+
+    // Get subscribers data
+    const savedSubscribers = localStorage.getItem("subscribers")
+    let subscriberCount = 0
+    if (savedSubscribers) {
+      const subscribers = JSON.parse(savedSubscribers)
+      subscriberCount = subscribers.length
+    }
+
+    // Get view data
+    const savedViews = localStorage.getItem("propertyViews")
+    let viewCount = 0
+    if (savedViews) {
+      const views = JSON.parse(savedViews)
+      // Sum all views
+      viewCount = Object.values(views).reduce((sum, projectViews) => {
+        return sum + Object.values(projectViews).reduce((total, count) => total + count, 0)
+      }, 0)
+    }
+
+    setStats({
+      totalUsers: userCount,
+      totalProperties: projectCount,
+      totalSubscribers: subscriberCount,
+      totalViews: viewCount,
+    })
   }, [])
-
-  if (isLoading) {
-    return (
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, index) => (
-          <Card key={index}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Loading...</CardTitle>
-              <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">-</div>
-              <p className="text-xs text-muted-foreground">Loading data...</p>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <div className="rounded-md bg-red-50 p-4 text-red-700">
-        <p>Error loading dashboard statistics: {error}</p>
-        <p className="mt-2 text-sm">Please refresh the page or contact support if the problem persists.</p>
-      </div>
-    )
-  }
 
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

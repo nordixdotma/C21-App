@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import {
   Dialog,
   DialogContent,
@@ -12,307 +11,288 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Loader2, Search, Trash2, UserPlus } from "lucide-react"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Card, CardContent } from "@/components/ui/card"
+import { Download, MoreHorizontal, Trash2 } from "lucide-react"
 import { toast } from "@/hooks/use-toast"
-import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Checkbox } from "@/components/ui/checkbox"
 
 interface Subscriber {
-  id: number
+  id: string
   email: string
-  subscribedAt: string
+  name?: string
+  subscriptionDate: string
+  source: string
 }
 
 export function SubscribersList() {
   const [subscribers, setSubscribers] = useState<Subscriber[]>([])
-  const [isLoading, setIsLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
-  const [newEmail, setNewEmail] = useState("")
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [selectedSubscriber, setSelectedSubscriber] = useState<Subscriber | null>(null)
+  const [selectedSubscribers, setSelectedSubscribers] = useState<string[]>([])
+  const [selectAll, setSelectAll] = useState(false)
 
   useEffect(() => {
-    fetchSubscribers()
+    // Load subscribers from localStorage
+    const storedSubscribers = localStorage.getItem("subscribers")
+    if (storedSubscribers) {
+      setSubscribers(JSON.parse(storedSubscribers))
+    } else {
+      // Initialize with empty array
+      setSubscribers([])
+      localStorage.setItem("subscribers", JSON.stringify([]))
+    }
   }, [])
 
-  const fetchSubscribers = async () => {
-    try {
-      setIsLoading(true)
-      setError(null)
+  useEffect(() => {
+    // Reset selected subscribers when the list changes
+    setSelectedSubscribers([])
+    setSelectAll(false)
+  }, [subscribers])
 
-      const token = localStorage.getItem("token")
-      if (!token) {
-        throw new Error("Authentication token not found")
-      }
-
-      const response = await fetch("/api/subscribers", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to fetch subscribers")
-      }
-
-      const data = await response.json()
-      setSubscribers(data)
-    } catch (err) {
-      console.error("Error fetching subscribers:", err)
-      setError(err instanceof Error ? err.message : "An error occurred")
-    } finally {
-      setIsLoading(false)
-    }
+  const handleDeleteClick = (subscriber: Subscriber) => {
+    setSelectedSubscriber(subscriber)
+    setIsDeleteConfirmOpen(true)
   }
 
-  const handleAddSubscriber = async () => {
-    if (!newEmail) {
-      toast({
-        title: "Missing information",
-        description: "Please enter an email address.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    try {
-      const response = await fetch("/api/subscribers", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ email: newEmail }),
-      })
-
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to add subscriber")
-      }
-
-      setSubscribers([data, ...subscribers])
-      setNewEmail("")
-      setIsAddDialogOpen(false)
-
-      toast({
-        title: "Subscriber added",
-        description: `${data.email} has been added to the newsletter.`,
-      })
-    } catch (err) {
-      console.error("Error adding subscriber:", err)
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "An error occurred while adding subscriber",
-        variant: "destructive",
-      })
-    }
-  }
-
-  const handleDeleteSubscriber = async () => {
+  const handleDeleteSubscriber = () => {
     if (!selectedSubscriber) return
 
-    try {
-      const token = localStorage.getItem("token")
-      if (!token) {
-        throw new Error("Authentication token not found")
-      }
+    const updatedSubscribers = subscribers.filter((sub) => sub.id !== selectedSubscriber.id)
+    setSubscribers(updatedSubscribers)
+    localStorage.setItem("subscribers", JSON.stringify(updatedSubscribers))
+    setIsDeleteConfirmOpen(false)
 
-      const response = await fetch(`/api/subscribers/${selectedSubscriber.id}`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      })
+    toast({
+      title: "Subscriber deleted",
+      description: `${selectedSubscriber.email} has been removed from the list.`,
+    })
+  }
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || "Failed to delete subscriber")
-      }
+  const handleDeleteSelected = () => {
+    if (selectedSubscribers.length === 0) return
 
-      setSubscribers(subscribers.filter((sub) => sub.id !== selectedSubscriber.id))
-      setSelectedSubscriber(null)
-      setIsDeleteDialogOpen(false)
+    const updatedSubscribers = subscribers.filter((sub) => !selectedSubscribers.includes(sub.id))
+    setSubscribers(updatedSubscribers)
+    localStorage.setItem("subscribers", JSON.stringify(updatedSubscribers))
+    setSelectedSubscribers([])
 
-      toast({
-        title: "Subscriber deleted",
-        description: `${selectedSubscriber.email} has been removed from the newsletter.`,
-      })
-    } catch (err) {
-      console.error("Error deleting subscriber:", err)
-      toast({
-        title: "Error",
-        description: err instanceof Error ? err.message : "An error occurred while deleting subscriber",
-        variant: "destructive",
-      })
+    toast({
+      title: "Subscribers deleted",
+      description: `${selectedSubscribers.length} subscribers have been removed from the list.`,
+    })
+  }
+
+  const handleSelectAll = () => {
+    if (selectAll) {
+      setSelectedSubscribers([])
+    } else {
+      setSelectedSubscribers(filteredSubscribers.map((sub) => sub.id))
+    }
+    setSelectAll(!selectAll)
+  }
+
+  const handleSelectSubscriber = (id: string) => {
+    if (selectedSubscribers.includes(id)) {
+      setSelectedSubscribers(selectedSubscribers.filter((subId) => subId !== id))
+    } else {
+      setSelectedSubscribers([...selectedSubscribers, id])
     }
   }
 
-  const filteredSubscribers = subscribers.filter((subscriber) =>
-    subscriber.email.toLowerCase().includes(searchQuery.toLowerCase()),
+  const exportToCSV = () => {
+    // Create CSV content
+    const headers = ["Email", "Name", "Subscription Date", "Source"]
+    const csvContent = [
+      headers.join(","),
+      ...subscribers.map((sub) => {
+        return [
+          `"${sub.email}"`,
+          sub.name ? `"${sub.name}"` : '""',
+          `"${sub.subscriptionDate}"`,
+          `"${sub.source}"`,
+        ].join(",")
+      }),
+    ].join("\n")
+
+    // Create a blob and download link
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.setAttribute("href", url)
+    link.setAttribute("download", `subscribers_${new Date().toISOString().split("T")[0]}.csv`)
+    link.style.visibility = "hidden"
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+
+    toast({
+      title: "Export successful",
+      description: `${subscribers.length} subscribers exported to CSV.`,
+    })
+  }
+
+  const filteredSubscribers = subscribers.filter(
+    (sub) =>
+      sub.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (sub.name && sub.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      sub.source.toLowerCase().includes(searchQuery.toLowerCase()),
   )
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="mt-4 text-gray-500">Loading subscribers...</p>
-      </div>
-    )
-  }
-
-  if (error) {
-    return (
-      <Alert variant="destructive" className="mb-6">
-        <AlertDescription>
-          Error loading subscribers: {error}
-          <div className="mt-2">
-            <Button onClick={fetchSubscribers} variant="outline" size="sm">
-              Try Again
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h2 className="font-typold text-xl md:text-2xl font-semibold">Email Subscribers</h2>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+          <Input
+            placeholder="Search subscribers..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full sm:max-w-sm"
+          />
+          <div className="flex gap-2 w-full sm:w-auto">
+            <Button variant="outline" onClick={exportToCSV} className="flex-1 sm:flex-none">
+              <Download className="mr-2 h-4 w-4" />
+              Export
             </Button>
           </div>
-        </AlertDescription>
-      </Alert>
-    )
-  }
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <h2 className="text-2xl font-semibold">Newsletter Subscribers</h2>
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
-          <div className="relative w-full sm:w-auto">
-            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-500" />
-            <Input
-              placeholder="Search subscribers..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 w-full sm:w-[300px]"
-            />
-          </div>
-          <Button onClick={() => setIsAddDialogOpen(true)} className="w-full sm:w-auto">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Add Subscriber
-          </Button>
         </div>
       </div>
 
-      {subscribers.length === 0 ? (
-        <Alert>
-          <AlertDescription>No subscribers found. Add your first subscriber to get started.</AlertDescription>
-        </Alert>
-      ) : (
-        <>
-          {/* Mobile view */}
-          <div className="md:hidden space-y-4">
-            {filteredSubscribers.map((subscriber) => (
-              <div key={subscriber.id} className="rounded-lg border bg-white p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium">{subscriber.email}</p>
-                    <p className="text-sm text-gray-500">
-                      Subscribed on {new Date(subscriber.subscribedAt).toLocaleDateString()}
-                    </p>
+      {selectedSubscribers.length > 0 && (
+        <div className="bg-muted/50 p-2 rounded-md flex items-center justify-between">
+          <span className="text-sm font-medium ml-2">
+            {selectedSubscribers.length} {selectedSubscribers.length === 1 ? "subscriber" : "subscribers"} selected
+          </span>
+          <Button variant="destructive" size="sm" onClick={handleDeleteSelected}>
+            <Trash2 className="h-4 w-4 mr-1" />
+            Delete Selected
+          </Button>
+        </div>
+      )}
+
+      {/* Mobile card view */}
+      <div className="md:hidden space-y-4">
+        {filteredSubscribers.length === 0 ? (
+          <div className="rounded-xl border bg-white p-6 text-center text-gray-500">No subscribers found.</div>
+        ) : (
+          filteredSubscribers.map((subscriber) => (
+            <Card key={subscriber.id}>
+              <CardContent className="p-4">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      checked={selectedSubscribers.includes(subscriber.id)}
+                      onCheckedChange={() => handleSelectSubscriber(subscriber.id)}
+                    />
+                    <div>
+                      <p className="font-medium">{subscriber.email}</p>
+                      {subscriber.name && <p className="text-sm text-gray-500">{subscriber.name}</p>}
+                    </div>
                   </div>
                   <Button
-                    variant="destructive"
+                    variant="ghost"
                     size="sm"
-                    onClick={() => {
-                      setSelectedSubscriber(subscriber)
-                      setIsDeleteDialogOpen(true)
-                    }}
+                    className="h-8 w-8 p-0 text-red-500"
+                    onClick={() => handleDeleteClick(subscriber)}
                   >
                     <Trash2 className="h-4 w-4" />
                     <span className="sr-only">Delete</span>
                   </Button>
                 </div>
-              </div>
-            ))}
-          </div>
+                <div className="mt-2 flex justify-between text-sm text-gray-500">
+                  <span>Source: {subscriber.source}</span>
+                  <span>Added: {subscriber.subscriptionDate}</span>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        )}
+      </div>
 
-          {/* Desktop view */}
-          <div className="hidden md:block rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Email</TableHead>
-                  <TableHead>Subscribed Date</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+      {/* Desktop table view */}
+      <div className="hidden md:block rounded-md border">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="w-[40px]">
+                <Checkbox checked={selectAll} onCheckedChange={handleSelectAll} />
+              </TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Source</TableHead>
+              <TableHead>Date Added</TableHead>
+              <TableHead className="w-[80px]">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredSubscribers.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={6} className="h-24 text-center">
+                  No subscribers found.
+                </TableCell>
+              </TableRow>
+            ) : (
+              filteredSubscribers.map((subscriber) => (
+                <TableRow key={subscriber.id}>
+                  <TableCell>
+                    <Checkbox
+                      checked={selectedSubscribers.includes(subscriber.id)}
+                      onCheckedChange={() => handleSelectSubscriber(subscriber.id)}
+                    />
+                  </TableCell>
+                  <TableCell className="font-medium">{subscriber.email}</TableCell>
+                  <TableCell>{subscriber.name || "-"}</TableCell>
+                  <TableCell>{subscriber.source}</TableCell>
+                  <TableCell>{subscriber.subscriptionDate}</TableCell>
+                  <TableCell>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                          <span className="sr-only">Open menu</span>
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleDeleteClick(subscriber)} className="text-red-500">
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredSubscribers.map((subscriber) => (
-                  <TableRow key={subscriber.id}>
-                    <TableCell>{subscriber.email}</TableCell>
-                    <TableCell>{new Date(subscriber.subscribedAt).toLocaleDateString()}</TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => {
-                          setSelectedSubscriber(subscriber)
-                          setIsDeleteDialogOpen(true)
-                        }}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" />
-                        Delete
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </>
-      )}
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
 
-      {/* Add Subscriber Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
         <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add Subscriber</DialogTitle>
-            <DialogDescription>Add a new subscriber to the newsletter.</DialogDescription>
-          </DialogHeader>
-          <div className="py-4">
-            <Input
-              placeholder="Email address"
-              type="email"
-              value={newEmail}
-              onChange={(e) => setNewEmail(e.target.value)}
-            />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddSubscriber}>Add Subscriber</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Subscriber Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
           <DialogHeader>
             <DialogTitle>Delete Subscriber</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete this subscriber? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
-          {selectedSubscriber && (
-            <div className="py-4">
+          <div className="py-4">
+            {selectedSubscriber && (
               <p>
-                You are about to delete <strong>{selectedSubscriber.email}</strong> from the newsletter.
+                You are about to delete <strong>{selectedSubscriber.email}</strong>
+                {selectedSubscriber.name && ` (${selectedSubscriber.name})`}.
               </p>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
+            )}
+          </div>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button variant="outline" onClick={() => setIsDeleteConfirmOpen(false)} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteSubscriber}>
-              Delete
+            <Button variant="destructive" onClick={handleDeleteSubscriber} className="w-full sm:w-auto">
+              Delete Subscriber
             </Button>
           </DialogFooter>
         </DialogContent>

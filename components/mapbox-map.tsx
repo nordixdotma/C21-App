@@ -6,8 +6,9 @@ import { useEffect, useRef, useState } from "react"
 import mapboxgl from "mapbox-gl"
 import "mapbox-gl/dist/mapbox-gl.css"
 
-// Set your Mapbox access token from environment variable
-mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_API_KEY || ""
+// Set your Mapbox access token
+// In production, use environment variables
+mapboxgl.accessToken = "pk.eyJ1IjoiZXhhbXBsZXVzZXIiLCJhIjoiY2xnNXBtcm5xMDFtMDNkcGx6MjFzYmV0YSJ9.xxxxxxxxxxx"
 
 interface MapboxMapProps {
   center: [number, number]
@@ -48,12 +49,6 @@ export default function MapboxMap({
   // Initialize map
   useEffect(() => {
     if (!isClient || !mapContainer.current || map.current) return
-
-    // Check if Mapbox API key is available
-    if (!mapboxgl.accessToken) {
-      console.error("Mapbox API key is missing. Please set NEXT_PUBLIC_MAPBOX_API_KEY in your environment variables.")
-      return
-    }
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
